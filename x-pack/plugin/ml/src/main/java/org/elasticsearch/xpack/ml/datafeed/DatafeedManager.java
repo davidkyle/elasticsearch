@@ -31,7 +31,7 @@ import org.elasticsearch.xpack.core.ml.job.messages.Messages;
 import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.persistent.PersistentTasksCustomMetaData.PersistentTask;
 import org.elasticsearch.xpack.ml.MachineLearning;
-import org.elasticsearch.xpack.ml.action.TransportStartDatafeedAction;
+import org.elasticsearch.xpack.ml.datafeed.persistent.task.DatafeedTask;
 import org.elasticsearch.xpack.ml.notifications.Auditor;
 
 import java.util.ArrayList;
@@ -76,14 +76,7 @@ public class DatafeedManager extends AbstractComponent {
         clusterService.addListener(taskRunner);
     }
 
-    public void run(TransportStartDatafeedAction.DatafeedTask task, Consumer<Exception> taskHandler) {
-        String datafeedId = task.getDatafeedId();
-        ClusterState state = clusterService.state();
-        MlMetadata mlMetadata = MlMetadata.getMlMetadata(state);
-
-        DatafeedConfig datafeed = mlMetadata.getDatafeed(datafeedId);
-        Job job = mlMetadata.getJobs().get(datafeed.getJobId());
-
+    public void run(DatafeedTask task, Job job, DatafeedConfig datafeed, Consumer<Exception> taskHandler) {
         ActionListener<DatafeedJob> datafeedJobHandler = ActionListener.wrap(
                 datafeedJob -> {
                     Holder holder = new Holder(task, datafeed, datafeedJob, new ProblemTracker(auditor, job.getId()), taskHandler);
@@ -105,7 +98,7 @@ public class DatafeedManager extends AbstractComponent {
         datafeedJobBuilder.build(job, datafeed, datafeedJobHandler);
     }
 
-    public void stopDatafeed(TransportStartDatafeedAction.DatafeedTask task, String reason, TimeValue timeout) {
+    public void stopDatafeed(DatafeedTask task, String reason, TimeValue timeout) {
         logger.info("[{}] attempt to stop datafeed [{}] [{}]", reason, task.getDatafeedId(), task.getAllocationId());
         Holder holder = runningDatafeedsOnThisNode.remove(task.getAllocationId());
         if (holder != null) {
@@ -252,12 +245,8 @@ public class DatafeedManager extends AbstractComponent {
         }
     }
 
-    private String getJobId(TransportStartDatafeedAction.DatafeedTask task) {
+    private String getJobId(DatafeedTask task) {
         return runningDatafeedsOnThisNode.get(task.getAllocationId()).getJobId();
-    }
-
-    private JobState getJobState(PersistentTasksCustomMetaData tasks, TransportStartDatafeedAction.DatafeedTask datafeedTask) {
-        return MlMetadata.getJobState(getJobId(datafeedTask), tasks);
     }
 
     private TimeValue computeNextDelay(long next) {
@@ -273,7 +262,7 @@ public class DatafeedManager extends AbstractComponent {
 
     public class Holder {
 
-        private final TransportStartDatafeedAction.DatafeedTask task;
+        private final DatafeedTask task;
         private final long allocationId;
         private final DatafeedConfig datafeed;
         // To ensure that we wait until loopback / realtime search has completed before we stop the datafeed
@@ -285,7 +274,7 @@ public class DatafeedManager extends AbstractComponent {
         volatile Future<?> future;
         private volatile boolean isRelocating;
 
-        Holder(TransportStartDatafeedAction.DatafeedTask task, DatafeedConfig datafeed, DatafeedJob datafeedJob,
+        Holder(DatafeedTask task, DatafeedConfig datafeed, DatafeedJob datafeedJob,
                ProblemTracker problemTracker, Consumer<Exception> handler) {
             this.task = task;
             this.allocationId = task.getAllocationId();
@@ -445,12 +434,12 @@ public class DatafeedManager extends AbstractComponent {
 
     private class TaskRunner implements ClusterStateListener {
 
-        private final List<TransportStartDatafeedAction.DatafeedTask> tasksToRun = new CopyOnWriteArrayList<>();
+        private final List<DatafeedTask> tasksToRun = new CopyOnWriteArrayList<>();
 
-        private void runWhenJobIsOpened(TransportStartDatafeedAction.DatafeedTask datafeedTask) {
+        private void runWhenJobIsOpened(DatafeedTask datafeedTask) {
             ClusterState clusterState = clusterService.state();
             PersistentTasksCustomMetaData tasks = clusterState.getMetaData().custom(PersistentTasksCustomMetaData.TYPE);
-            if (getJobState(tasks, datafeedTask) == JobState.OPENED) {
+            if (MlMetadata.getJobState(getJobId(datafeedTask), tasks) == JobState.OPENED) {
                 runTask(datafeedTask);
             } else {
                 logger.info("Datafeed [{}] is waiting for job [{}] to be opened",
@@ -459,7 +448,7 @@ public class DatafeedManager extends AbstractComponent {
             }
         }
 
-        private void runTask(TransportStartDatafeedAction.DatafeedTask task) {
+        private void runTask(DatafeedTask task) {
             // This clearing of the thread context is not strictly necessary.  Every action performed by the
             // datafeed _should_ be done using the MlClientHelper, which will set the appropriate thread
             // context.  However, by clearing the thread context here if anyone forgets to use MlClientHelper
@@ -483,12 +472,12 @@ public class DatafeedManager extends AbstractComponent {
                 return;
             }
 
-            List<TransportStartDatafeedAction.DatafeedTask> remainingTasks = new ArrayList<>();
-            for (TransportStartDatafeedAction.DatafeedTask datafeedTask : tasksToRun) {
+            List<DatafeedTask> remainingTasks = new ArrayList<>();
+            for (DatafeedTask datafeedTask : tasksToRun) {
                 if (runningDatafeedsOnThisNode.containsKey(datafeedTask.getAllocationId()) == false) {
                     continue;
                 }
-                JobState jobState = getJobState(currentTasks, datafeedTask);
+                JobState jobState = MlMetadata.getJobState(getJobId(datafeedTask), currentTasks);
                 if (jobState == JobState.OPENED) {
                     runTask(datafeedTask);
                 } else if (jobState == JobState.OPENING) {

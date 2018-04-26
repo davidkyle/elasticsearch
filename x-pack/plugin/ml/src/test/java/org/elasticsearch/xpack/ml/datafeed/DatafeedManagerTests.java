@@ -39,7 +39,7 @@ import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.persistent.PersistentTasksCustomMetaData.PersistentTask;
 import org.elasticsearch.xpack.ml.MachineLearning;
 import org.elasticsearch.xpack.ml.action.TransportStartDatafeedActionTests;
-import org.elasticsearch.xpack.ml.action.TransportStartDatafeedAction.DatafeedTask;
+import org.elasticsearch.xpack.ml.datafeed.persistent.task.DatafeedTask;
 import org.elasticsearch.xpack.ml.job.persistence.MockClientBuilder;
 import org.elasticsearch.xpack.ml.notifications.Auditor;
 import org.junit.Before;

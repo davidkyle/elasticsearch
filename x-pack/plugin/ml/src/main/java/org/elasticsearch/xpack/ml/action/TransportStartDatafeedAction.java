@@ -47,6 +47,7 @@ import org.elasticsearch.xpack.ml.datafeed.MlRemoteLicenseChecker;
 import org.elasticsearch.xpack.ml.datafeed.DatafeedManager;
 import org.elasticsearch.xpack.ml.datafeed.DatafeedNodeSelector;
 import org.elasticsearch.xpack.ml.datafeed.extractor.DataExtractorFactory;
+import org.elasticsearch.xpack.ml.datafeed.persistent.task.StartDatafeedPersistentTasksExecutor;
 
 import java.util.List;
 import java.util.Map;
@@ -113,7 +114,6 @@ public class TransportStartDatafeedAction extends TransportMasterNodeAction<Star
                                    ActionListener<StartDatafeedAction.Response> listener) {
         StartDatafeedAction.DatafeedParams params = request.getParams();
         if (licenseState.isMachineLearningAllowed()) {
-
             ActionListener<PersistentTasksCustomMetaData.PersistentTask<StartDatafeedAction.DatafeedParams>> waitForTaskListener =
                     new ActionListener<PersistentTasksCustomMetaData.PersistentTask<StartDatafeedAction.DatafeedParams>>() {
                         @Override

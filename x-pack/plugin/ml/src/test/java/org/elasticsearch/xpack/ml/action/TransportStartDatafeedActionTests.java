@@ -17,6 +17,7 @@ import org.elasticsearch.xpack.core.ml.job.config.JobState;
 import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.xpack.ml.datafeed.DatafeedManager;
 import org.elasticsearch.xpack.ml.datafeed.DatafeedManagerTests;
+import org.elasticsearch.xpack.ml.datafeed.persistent.task.DatafeedTask;
 
 import java.util.Collections;
 import java.util.Date;
@@ -84,11 +85,11 @@ public class TransportStartDatafeedActionTests extends ESTestCase {
         TransportStartDatafeedAction.validate("foo-datafeed", mlMetadata2, tasks);
     }
 
-    public static TransportStartDatafeedAction.DatafeedTask createDatafeedTask(long id, String type, String action,
-                                                                               TaskId parentTaskId,
-                                                                               StartDatafeedAction.DatafeedParams params,
-                                                                               DatafeedManager datafeedManager) {
-        TransportStartDatafeedAction.DatafeedTask task = new TransportStartDatafeedAction.DatafeedTask(id, type, action, parentTaskId,
+    public static DatafeedTask createDatafeedTask(long id, String type, String action,
+                                                               TaskId parentTaskId,
+                                                               StartDatafeedAction.DatafeedParams params,
+                                                               DatafeedManager datafeedManager) {
+        DatafeedTask task = new DatafeedTask(id, type, action, parentTaskId,
                 params, Collections.emptyMap());
         task.datafeedManager = datafeedManager;
         return task;
