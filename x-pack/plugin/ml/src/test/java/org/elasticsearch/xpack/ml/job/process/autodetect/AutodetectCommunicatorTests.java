@@ -166,25 +166,29 @@ public class AutodetectCommunicatorTests extends ESTestCase {
 
     public void testCloseGivenProcessIsReady() throws IOException {
         AutodetectProcess process = mockAutodetectProcessWithOutputStream();
+        AutoDetectResultProcessor resultProcessor = mock(AutoDetectResultProcessor.class);
         when(process.isReady()).thenReturn(true);
-        AutodetectCommunicator communicator = createAutodetectCommunicator(process, mock(AutoDetectResultProcessor.class));
+        AutodetectCommunicator communicator = createAutodetectCommunicator(process, resultProcessor);
 
         communicator.close();
 
         verify(process).close();
         verify(process, never()).kill();
+        verify(resultProcessor).flushIndices();
         Mockito.verifyNoMoreInteractions(stateStreamer);
     }
 
     public void testCloseGivenProcessIsNotReady() throws IOException {
         AutodetectProcess process = mockAutodetectProcessWithOutputStream();
+        AutoDetectResultProcessor resultProcessor = mock(AutoDetectResultProcessor.class);
         when(process.isReady()).thenReturn(false);
-        AutodetectCommunicator communicator = createAutodetectCommunicator(process, mock(AutoDetectResultProcessor.class));
+        AutodetectCommunicator communicator = createAutodetectCommunicator(process, resultProcessor);
 
         communicator.close();
 
         verify(process).kill();
         verify(process, never()).close();
+        verify(resultProcessor, never()).flushIndices();
         verify(stateStreamer).cancel();
     }
 
@@ -200,6 +204,7 @@ public class AutodetectCommunicatorTests extends ESTestCase {
         boolean finish = randomBoolean();
         communicator.killProcess(awaitCompletion, finish);
         Mockito.verify(resultProcessor).setProcessKilled();
+        Mockito.verify(resultProcessor, never()).flushIndices();
         Mockito.verify(process).kill();
         Mockito.verify(executorService).shutdown();
         if (awaitCompletion) {

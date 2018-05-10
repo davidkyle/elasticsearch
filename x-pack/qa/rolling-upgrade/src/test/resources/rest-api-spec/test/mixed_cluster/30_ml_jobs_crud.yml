@@ -5,6 +5,10 @@ setup:
         wait_for_status: yellow
         wait_for_nodes: 2
 
+ - do:
+     cluster.health:
+        wait_for_no_initializing_shards: true
+
 ---
 "Test get old cluster job":
   - do:
@@ -94,3 +98,10 @@ setup:
       xpack.ml.get_jobs:
         job_id: old-cluster-job-with-rules
   - match: { count: 1 }
+
+
+---
+teardown:
+ - do:
+     cluster.health:
+        wait_for_no_initializing_shards: true

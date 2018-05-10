@@ -8,17 +8,20 @@ package org.elasticsearch.xpack.ml.job.process.autodetect.output;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.xpack.core.ml.MachineLearningField;
 import org.elasticsearch.xpack.core.ml.action.PutJobAction;
 import org.elasticsearch.xpack.core.ml.action.UpdateJobAction;
 import org.elasticsearch.xpack.core.ml.job.config.JobUpdate;
 import org.elasticsearch.xpack.core.ml.job.messages.Messages;
+import org.elasticsearch.xpack.core.ml.job.persistence.AnomalyDetectorsIndex;
 import org.elasticsearch.xpack.core.ml.job.process.autodetect.output.FlushAcknowledgement;
 import org.elasticsearch.xpack.core.ml.job.process.autodetect.state.ModelSizeStats;
 import org.elasticsearch.xpack.core.ml.job.process.autodetect.state.ModelSnapshot;
@@ -49,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.elasticsearch.xpack.core.ClientHelper.ML_ORIGIN;
 import static org.elasticsearch.xpack.core.ClientHelper.executeAsyncWithOrigin;
+import static org.elasticsearch.xpack.core.ClientHelper.stashWithOrigin;
 
 /**
  * A runnable class that reads the autodetect process output in the
@@ -395,6 +399,21 @@ public class AutoDetectResultProcessor {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.info("[{}] Interrupted waiting for results processor to complete", jobId);
+        }
+    }
+
+    /**
+     * Flush the job state and results indices.
+     * Due to the use of {@code index.translog.durability: async} on these indices
+     * see {@link org.elasticsearch.xpack.ml.MachineLearning#getIndexTemplateMetaDataUpgrader}
+     * this ensures the translog is flushed
+     */
+    public void flushIndices() {
+        try (ThreadContext.StoredContext ignore = stashWithOrigin(client.threadPool().getThreadContext(), ML_ORIGIN)) {
+            client.admin().indices().flush(
+                    new FlushRequest(AnomalyDetectorsIndex.jobStateIndexName(),
+                            AnomalyDetectorsIndex.jobResultsAliasedName(jobId)))
+                    .actionGet();
         }
     }
 

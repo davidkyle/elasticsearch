@@ -153,13 +153,17 @@ public class AutodetectCommunicator implements Closeable {
         Future<?> future = autodetectWorkerExecutor.submit(() -> {
             checkProcessIsAlive();
             try {
-                if (autodetectProcess.isReady()) {
+                boolean processIsReady = autodetectProcess.isReady();
+                if (processIsReady) {
                     autodetectProcess.close();
                 } else {
                     killProcess(false, false);
                     stateStreamer.cancel();
                 }
                 autoDetectResultProcessor.awaitCompletion();
+                if (processIsReady) {
+                    autoDetectResultProcessor.flushIndices();
+                }
             } finally {
                 onFinishHandler.accept(restart ? new ElasticsearchException(reason) : null);
             }

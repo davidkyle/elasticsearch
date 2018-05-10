@@ -49,6 +49,11 @@
         job_id: old-cluster-job
   - match: { count: 1 }
 
+  - do:
+      cluster.health:
+        index: [".ml-state", ".ml-anomalies-shared"]
+        wait_for_active_shards: 20
+
 ---
 "Put job on the old cluster with the default model memory limit and post some data":
   - do:
@@ -95,6 +100,11 @@
       xpack.ml.get_buckets:
         job_id: no-model-memory-limit-job
   - match: { count: 201 }
+
+  - do:
+      cluster.health:
+        index: [".ml-state", ".ml-anomalies-shared"]
+        wait_for_active_shards: 20
 
 ---
 "Put job with empty strings in the configuration":
@@ -207,3 +217,13 @@
             "data_description" : {}
           }
   - match: { job_id: "old-cluster-function-shortcut-expansion" }
+
+#---
+#teardown:
+# - do:
+#     cluster.health:
+#        wait_for_status: green
+#
+# - do:
+#     cluster.health:
+#        wait_for_no_initializing_shards: true
