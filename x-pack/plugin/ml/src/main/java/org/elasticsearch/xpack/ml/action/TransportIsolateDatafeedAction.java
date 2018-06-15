@@ -24,12 +24,11 @@ import org.elasticsearch.transport.TransportService;
 import org.elasticsearch.xpack.core.ml.MlMetadata;
 import org.elasticsearch.xpack.core.ml.action.IsolateDatafeedAction;
 import org.elasticsearch.xpack.ml.MachineLearning;
-import org.elasticsearch.xpack.ml.datafeed.persistent.task.DatafeedTask;
 
 import java.io.IOException;
 import java.util.List;
 
-public class TransportIsolateDatafeedAction extends TransportTasksAction<DatafeedTask,
+public class TransportIsolateDatafeedAction extends TransportTasksAction<TransportStartDatafeedAction.DatafeedTask,
         IsolateDatafeedAction.Request, IsolateDatafeedAction.Response, IsolateDatafeedAction.Response> {
 
     @Inject
@@ -80,7 +79,7 @@ public class TransportIsolateDatafeedAction extends TransportTasksAction<Datafee
     }
 
     @Override
-    protected void taskOperation(IsolateDatafeedAction.Request request, DatafeedTask datafeedTask,
+    protected void taskOperation(IsolateDatafeedAction.Request request, TransportStartDatafeedAction.DatafeedTask datafeedTask,
                                  ActionListener<IsolateDatafeedAction.Response> listener) {
         datafeedTask.isolate();
         listener.onResponse(new IsolateDatafeedAction.Response());

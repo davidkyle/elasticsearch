@@ -35,7 +35,6 @@ import org.elasticsearch.xpack.core.ml.utils.ExceptionsHelper;
 import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.persistent.PersistentTasksService;
 import org.elasticsearch.xpack.ml.MachineLearning;
-import org.elasticsearch.xpack.ml.datafeed.persistent.task.DatafeedTask;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TransportStopDatafeedAction extends TransportTasksAction<DatafeedTask, StopDatafeedAction.Request,
+public class TransportStopDatafeedAction extends TransportTasksAction<TransportStartDatafeedAction.DatafeedTask, StopDatafeedAction.Request,
         StopDatafeedAction.Response, StopDatafeedAction.Response> {
 
     private final ThreadPool threadPool;
