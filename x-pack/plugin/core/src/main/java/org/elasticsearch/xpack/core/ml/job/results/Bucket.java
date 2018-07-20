@@ -376,4 +376,14 @@ public class Bucket implements ToXContentObject, Writeable {
     public boolean isNormalizable() {
         return anomalyScore > 0.0 || partitionScores.stream().anyMatch(s -> s.getRecordScore() > 0);
     }
+
+    /**
+     * A empty bucket is one containing no anomalies (including those
+     * suppressed by scheduled events) and has a zero anonmaly score.
+     *
+     * @return True if the bucket has no anomalies
+     */
+    public boolean isEmptyBucket() {
+        return anomalyScore == 0.0 && scheduledEvents.isEmpty() && records.isEmpty();
+    }
 }

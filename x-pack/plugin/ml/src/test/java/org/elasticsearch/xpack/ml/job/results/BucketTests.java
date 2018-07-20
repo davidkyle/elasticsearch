@@ -317,4 +317,16 @@ public class BucketTests extends AbstractSerializingTestCase<Bucket> {
             Bucket.LENIENT_PARSER.apply(parser, null);
         }
     }
+
+    public void testIsEmpty() {
+        Bucket bucket = new Bucket("empty", new Date(123), 60L);
+        assertTrue(bucket.isEmptyBucket());
+
+        bucket.setAnomalyScore(10.0);
+        assertFalse(bucket.isEmptyBucket());
+
+        bucket.setAnomalyScore(0.0);
+        bucket.setScheduledEvents(Collections.singletonList("se"));
+        assertFalse(bucket.isEmptyBucket());
+    }
 }

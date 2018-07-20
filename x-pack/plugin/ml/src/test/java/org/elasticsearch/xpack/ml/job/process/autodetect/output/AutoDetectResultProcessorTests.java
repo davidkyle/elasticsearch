@@ -125,13 +125,41 @@ public class AutoDetectResultProcessorTests extends ESTestCase {
         AutoDetectResultProcessor.Context context = new AutoDetectResultProcessor.Context(JOB_ID, bulkBuilder);
         context.deleteInterimRequired = false;
         AutodetectResult result = mock(AutodetectResult.class);
-        Bucket bucket = mock(Bucket.class);
+        Bucket bucket = new Bucket(JOB_ID, new Date(), 300L);
+        bucket.setAnomalyScore(10.0);
         when(result.getBucket()).thenReturn(bucket);
         processorUnderTest.processResult(context, result);
 
         verify(bulkBuilder, times(1)).persistBucket(bucket);
         verify(bulkBuilder, times(1)).executeRequest();
         verify(persister, never()).deleteInterimResults(JOB_ID);
+        verifyNoMoreInteractions(persister);
+    }
+
+    public void testProcessResult_emptyBuckets() {
+        JobResultsPersister.Builder bulkBuilder = mock(JobResultsPersister.Builder.class);
+        when(persister.bulkPersisterBuilder(JOB_ID)).thenReturn(bulkBuilder);
+        when(bulkBuilder.persistBucket(any(Bucket.class))).thenReturn(bulkBuilder);
+
+        AutoDetectResultProcessor.Context context = new AutoDetectResultProcessor.Context(JOB_ID, bulkBuilder);
+        context.deleteInterimRequired = false;
+        AutodetectResult result = mock(AutodetectResult.class);
+        Bucket emptyBucket = new Bucket(JOB_ID, new Date(), 300L);
+        when(result.getBucket()).thenReturn(emptyBucket);
+        processorUnderTest.processResult(context, result);
+
+        verify(bulkBuilder, times(1)).persistBucket(emptyBucket);
+        verify(bulkBuilder, never()).executeRequest();
+        verifyNoMoreInteractions(persister);
+
+        result = mock(AutodetectResult.class);
+        Bucket bucketWithAnomalies = new Bucket(JOB_ID, new Date(), 300L);
+        bucketWithAnomalies.setAnomalyScore(10.0);
+        when(result.getBucket()).thenReturn(bucketWithAnomalies);
+        processorUnderTest.processResult(context, result);
+
+        verify(bulkBuilder, times(2)).persistBucket(any());
+        verify(bulkBuilder, times(1)).executeRequest();
         verifyNoMoreInteractions(persister);
     }
 

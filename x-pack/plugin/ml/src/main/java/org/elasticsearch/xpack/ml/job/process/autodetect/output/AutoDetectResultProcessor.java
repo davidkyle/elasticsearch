@@ -208,7 +208,13 @@ public class AutoDetectResultProcessor {
 
             // persist after deleting interim results in case the new
             // results are also interim
-            context.bulkResultsPersister.persistBucket(bucket).executeRequest();
+            context.bulkResultsPersister.persistBucket(bucket);
+
+            // Persist the bucket immediately if it has anomalies
+            if (bucket.isEmptyBucket() == false) {
+                context.bulkResultsPersister.executeRequest();
+            }
+
             latestDateForEstablishedModelMemoryCalc = bucket.getTimestamp();
             ++bucketCount;
 
