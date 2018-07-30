@@ -17,7 +17,6 @@ import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.analysis.AnalysisRegistry;
 import org.elasticsearch.tasks.TaskId;
-import org.elasticsearch.xpack.core.ml.MLMetadataField;
 import org.elasticsearch.xpack.core.ml.MachineLearningField;
 import org.elasticsearch.xpack.core.ml.MlMetadata;
 import org.elasticsearch.xpack.core.ml.action.DeleteJobAction;
@@ -122,7 +121,7 @@ public class JobManagerIT extends MlSingleNodeTestCase {
         mlMetadata.putJob(putJobRequest.getJobBuilder().build(), false);
         ClusterState clusterStateWithJob = ClusterState.builder(new ClusterName("_name"))
                 .metaData(MetaData.builder()
-                        .putCustom(MLMetadataField.TYPE, mlMetadata.build()))
+                        .putCustom(MlMetadata.TYPE, mlMetadata.build()))
                 .build();
 
         responseHolder.set(null);
@@ -208,7 +207,7 @@ public class JobManagerIT extends MlSingleNodeTestCase {
         }
         // TODO For now this only works if we add the job to the cluster state
         ClusterState clusterState = ClusterState.builder(new ClusterName("_name"))
-                .metaData(MetaData.builder().putCustom(MLMetadataField.TYPE, mlMetadata.build())).build();
+                .metaData(MetaData.builder().putCustom(MlMetadata.TYPE, mlMetadata.build())).build();
 
 
         AtomicReference<PutJobAction.Response> putJobResponseHolder = new AtomicReference<>();

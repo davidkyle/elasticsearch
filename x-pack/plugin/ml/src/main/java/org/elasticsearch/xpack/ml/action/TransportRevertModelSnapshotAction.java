@@ -21,6 +21,7 @@ import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
 import org.elasticsearch.xpack.core.ml.MlMetadata;
+import org.elasticsearch.xpack.core.ml.MlTasks;
 import org.elasticsearch.xpack.core.ml.action.RevertModelSnapshotAction;
 import org.elasticsearch.xpack.core.ml.job.config.JobState;
 import org.elasticsearch.xpack.core.ml.job.messages.Messages;
@@ -72,7 +73,7 @@ public class TransportRevertModelSnapshotAction extends TransportMasterNodeActio
                 request.getSnapshotId(), request.getJobId(), request.getDeleteInterveningResults());
 
         PersistentTasksCustomMetaData tasks = clusterService.state().getMetaData().custom(PersistentTasksCustomMetaData.TYPE);
-        JobState jobState = MlMetadata.getJobState(request.getJobId(), tasks);
+        JobState jobState = MlTasks.getJobState(request.getJobId(), tasks);
         if (jobState.equals(JobState.CLOSED) == false) {
             throw ExceptionsHelper.conflictStatusException(Messages.getMessage(Messages.REST_JOB_NOT_CLOSED_REVERT));
         }
