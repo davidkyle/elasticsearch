@@ -107,6 +107,7 @@ public class JobConfigProvider extends AbstractComponent {
                     ElasticsearchMappings.DOC_TYPE, Job.documentId(job.getId()))
                     .setSource(source)
                     .setOpType(DocWriteRequest.OpType.CREATE)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                     .request();
 
             executeAsyncWithOrigin(client, ML_ORIGIN, IndexAction.INSTANCE, indexRequest, ActionListener.wrap(
@@ -217,6 +218,7 @@ public class JobConfigProvider extends AbstractComponent {
     public void deleteJob(String jobId,  ActionListener<DeleteResponse> actionListener) {
         DeleteRequest request = new DeleteRequest(AnomalyDetectorsIndex.configIndexName(),
                 ElasticsearchMappings.DOC_TYPE, Job.documentId(jobId));
+        request.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 
         executeAsyncWithOrigin(client, ML_ORIGIN, DeleteAction.INSTANCE, request, actionListener);
     }
