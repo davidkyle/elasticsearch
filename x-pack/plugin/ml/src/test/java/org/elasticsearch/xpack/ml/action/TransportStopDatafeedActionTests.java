@@ -18,6 +18,7 @@ import org.elasticsearch.persistent.PersistentTasksCustomMetaData;
 import org.elasticsearch.xpack.ml.support.BaseMlIntegTestCase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -61,14 +62,19 @@ public class TransportStopDatafeedActionTests extends ESTestCase {
         datafeedConfig = createDatafeedConfig("datafeed_2", "job_id_2").build();
         mlMetadataBuilder.putJob(job, false).putDatafeed(datafeedConfig, Collections.emptyMap());
 
+        addTask("datafeed_3", 0L, "node-1", null, tasksBuilder);
+        job = BaseMlIntegTestCase.createScheduledJob("job_id_3").build(new Date());
+        datafeedConfig = createDatafeedConfig("datafeed_3", "job_id_3").build();
+        mlMetadataBuilder.putJob(job, false).putDatafeed(datafeedConfig, Collections.emptyMap());
+
         PersistentTasksCustomMetaData tasks = tasksBuilder.build();
         MlMetadata mlMetadata = mlMetadataBuilder.build();
 
         List<String> startedDatafeeds = new ArrayList<>();
         List<String> stoppingDatafeeds = new ArrayList<>();
-        TransportStopDatafeedAction.resolveDataFeedIds(new StopDatafeedAction.Request("datafeed_1"), mlMetadata, tasks, startedDatafeeds,
+        TransportStopDatafeedAction.resolveDataFeedIds(new StopDatafeedAction.Request("datafeed_*"), mlMetadata, tasks, startedDatafeeds,
                 stoppingDatafeeds);
-        assertEquals(Collections.singletonList("datafeed_1"), startedDatafeeds);
+        assertEquals(Arrays.asList("datafeed_1", "datafeed_3"), startedDatafeeds);
         assertEquals(Collections.emptyList(), stoppingDatafeeds);
 
         startedDatafeeds.clear();
@@ -121,6 +127,8 @@ public class TransportStopDatafeedActionTests extends ESTestCase {
         taskBuilder.addTask(MlTasks.datafeedTaskId(datafeedId), StartDatafeedAction.TASK_NAME,
                 new StartDatafeedAction.DatafeedParams(datafeedId, startTime),
                 new PersistentTasksCustomMetaData.Assignment(nodeId, "test assignment"));
-        taskBuilder.updateTaskState(MlTasks.datafeedTaskId(datafeedId), state);
+        if (state != null) {
+            taskBuilder.updateTaskState(MlTasks.datafeedTaskId(datafeedId), state);
+        }
     }
 }

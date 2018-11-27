@@ -59,12 +59,15 @@ public final class MlTasks {
 
     public static DatafeedState getDatafeedState(String datafeedId, @Nullable PersistentTasksCustomMetaData tasks) {
         PersistentTasksCustomMetaData.PersistentTask<?> task = getDatafeedTask(datafeedId, tasks);
-        if (task != null && task.getState() != null) {
-            return (DatafeedState) task.getState();
-        } else {
-            // If we haven't started a datafeed then there will be no persistent task,
-            // which is the same as if the datafeed was't started
-            return DatafeedState.STOPPED;
+        if (task != null) {
+            if (task.getState() == null) {
+                return DatafeedState.STARTING;
+            } else {
+                return (DatafeedState) task.getState();
+            }
         }
+        // If we haven't started a datafeed then there will be no persistent task,
+        // which is the same as if the datafeed was't started
+        return DatafeedState.STOPPED;
     }
 }

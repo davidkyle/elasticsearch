@@ -88,14 +88,13 @@ public class TransportStopDatafeedAction extends TransportTasksAction<TransportS
                                                           List<String> stoppingDatafeedIds) {
         switch (datafeedState) {
             case STARTED:
+            case STARTING:
                 startedDatafeedIds.add(datafeedId);
                 break;
             case STOPPED:
                 break;
             case STOPPING:
                 stoppingDatafeedIds.add(datafeedId);
-                break;
-            default:
                 break;
         }
     }
