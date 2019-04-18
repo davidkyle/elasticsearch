@@ -28,7 +28,6 @@ import org.elasticsearch.xpack.core.dataframe.DataFrameField;
 import org.elasticsearch.xpack.core.dataframe.DataFrameMessages;
 import org.elasticsearch.xpack.core.dataframe.action.StartDataFrameTransformTaskAction;
 import org.elasticsearch.xpack.core.dataframe.action.StartDataFrameTransformTaskAction.Response;
-import org.elasticsearch.xpack.core.dataframe.action.StopDataFrameTransformAction;
 import org.elasticsearch.xpack.core.dataframe.transforms.DataFrameIndexerTransformStats;
 import org.elasticsearch.xpack.core.dataframe.transforms.DataFrameTransform;
 import org.elasticsearch.xpack.core.dataframe.transforms.DataFrameTransformConfig;
@@ -194,11 +193,10 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
         ));
     }
 
-    public synchronized void stop(ActionListener<StopDataFrameTransformAction.Response> listener) {
+    public synchronized void stop() {
         // taskState is initialized as STOPPED and is updated in tandem with the indexerState
         // Consequently, if it is STOPPED, we consider the whole task STOPPED.
         if (taskState.get() == DataFrameTransformTaskState.STOPPED) {
-            listener.onResponse(new StopDataFrameTransformAction.Response(true));
             return;
         }
         final IndexerState newState = indexer.stop();
@@ -206,32 +204,11 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
         case STOPPED:
             // Fall through to `STOPPING` as the behavior is the same for both, we should persist for both
         case STOPPING:
-            // update the persistent state to STOPPED. There are two scenarios and both are safe:
-            // 1. we persist STOPPED now, indexer continues a bit then sees the flag and checkpoints another STOPPED with the more recent
-            // position.
-            // 2. we persist STOPPED now, indexer continues a bit but then dies. When/if we resume we'll pick up at last checkpoint,
-            // overwrite some docs and eventually checkpoint.
-            taskState.set(DataFrameTransformTaskState.STOPPED);
-            DataFrameTransformState state = new DataFrameTransformState(
-                DataFrameTransformTaskState.STOPPED,
-                IndexerState.STOPPED,
-                indexer.getPosition(),
-                currentCheckpoint.get(),
-                stateReason.get());
-            persistStateToClusterState(state, ActionListener.wrap(
-                task -> {
-                    auditor.info(transform.getId(), "Updated state to [" + state.getTaskState() + "]");
-                    listener.onResponse(new StopDataFrameTransformAction.Response(true));
-                },
-                exc -> listener.onFailure(new ElasticsearchException(
-                    "Error while updating state for data frame transform [{}] to [{}]", exc,
-                    transform.getId(),
-                    state.getIndexerState()))));
+            shutdown();
             break;
         default:
-            listener.onFailure(new ElasticsearchException("Cannot stop task for data frame transform [{}], because state was [{}]",
-                    transform.getId(), newState));
-            break;
+            throw new ElasticsearchException("Cannot stop task for data frame transform [{}], because state was [{}]",
+                    transform.getId(), newState);
         }
     }
 
@@ -250,14 +227,8 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
      * cleanup operations in the future
      */
     synchronized void shutdown() {
-        try {
-            logger.info("Data frame indexer [" + transform.getId() + "] received abort request, stopping indexer.");
-            schedulerEngine.remove(SCHEDULE_NAME + "_" + transform.getId());
-            schedulerEngine.unregister(this);
-        } catch (Exception e) {
-            markAsFailed(e);
-            return;
-        }
+        schedulerEngine.remove(SCHEDULE_NAME + "_" + transform.getId());
+        schedulerEngine.unregister(this);
         markAsCompleted();
     }
 

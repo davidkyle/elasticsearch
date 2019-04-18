@@ -6,8 +6,6 @@
 
 package org.elasticsearch.xpack.dataframe.action;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.ActionListener;
@@ -56,8 +54,6 @@ import java.util.stream.Collectors;
 
 public class TransportPutDataFrameTransformAction
         extends TransportMasterNodeAction<PutDataFrameTransformAction.Request, PutDataFrameTransformAction.Response> {
-
-    private static final Logger logger = LogManager.getLogger(TransportPutDataFrameTransformAction.class);
 
     private final XPackLicenseState licenseState;
     private final Client client;
