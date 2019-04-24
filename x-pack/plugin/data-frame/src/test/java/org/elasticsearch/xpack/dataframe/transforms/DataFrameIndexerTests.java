@@ -165,9 +165,8 @@ public class DataFrameIndexerTests extends ESTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
-            super.onFinish(listener);
-            listener.onResponse(null);
+        protected void onFinish() {
+            super.onFinish();
         }
 
         @Override

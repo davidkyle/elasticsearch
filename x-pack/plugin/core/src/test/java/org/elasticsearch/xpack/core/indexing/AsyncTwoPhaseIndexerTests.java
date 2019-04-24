@@ -110,10 +110,9 @@ public class AsyncTwoPhaseIndexerTests extends ESTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
+        protected void onFinish() {
             assertThat(step, equalTo(4));
             ++step;
-            listener.onResponse(null);
             isFinished.set(true);
         }
 
@@ -184,7 +183,7 @@ public class AsyncTwoPhaseIndexerTests extends ESTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
+        protected void onFinish() {
             fail("should not be called");
         }
 

@@ -246,10 +246,8 @@ public abstract class AsyncTwoPhaseIndexer<JobPosition, JobStats extends Indexer
     /**
      * Called when a background job finishes before the internal state changes from {@link IndexerState#INDEXING} back to
      * {@link IndexerState#STARTED}.
-     *
-     * @param listener listener to call after done
      */
-    protected abstract void onFinish(ActionListener<Void> listener);
+    protected abstract void onFinish();
 
     /**
      * Called when a background job detects that the indexer is aborted causing the
@@ -314,10 +312,8 @@ public abstract class AsyncTwoPhaseIndexer<JobPosition, JobStats extends Indexer
                 logger.debug("Finished indexing for job [" + getJobId() + "], saving state and shutting down.");
 
                 // execute finishing tasks
-                onFinish(ActionListener.wrap(
-                        r -> doSaveState(finishAndSetState(), position.get(), () -> {}),
-                        e -> doSaveState(finishAndSetState(), position.get(), () -> {})));
-
+                onFinish();
+                doSaveState(finishAndSetState(), position.get(), () -> {});
                 return;
             }
 

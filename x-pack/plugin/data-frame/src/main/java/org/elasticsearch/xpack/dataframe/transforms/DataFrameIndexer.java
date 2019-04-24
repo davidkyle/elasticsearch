@@ -107,7 +107,7 @@ public abstract class DataFrameIndexer extends AsyncTwoPhaseIndexer<Map<String, 
     }
 
     @Override
-    protected void onFinish(ActionListener<Void> listener) {
+    protected void onFinish() {
         // reset the page size, so we do not memorize a low page size forever, the pagesize will be re-calculated on start
         pageSize = 0;
     }

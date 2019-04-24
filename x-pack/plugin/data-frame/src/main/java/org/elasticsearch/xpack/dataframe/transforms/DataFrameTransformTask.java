@@ -9,6 +9,7 @@ package org.elasticsearch.xpack.dataframe.transforms;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.util.SetOnce;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkAction;
@@ -292,6 +293,7 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
             markAsFailed(e);
             return;
         }
+
         markAsCompleted();
     }
 
@@ -619,17 +621,33 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
-            try {
-                super.onFinish(listener);
-                long checkpoint = transformTask.currentCheckpoint.incrementAndGet();
-                auditor.info(transformTask.getTransformId(), "Finished indexing for data frame transform checkpoint [" + checkpoint + "]");
-                logger.info(
-                    "Finished indexing for data frame transform [" + transformTask.getTransformId() + "] checkpoint [" + checkpoint + "]");
-                listener.onResponse(null);
-            } catch (Exception e) {
-                listener.onFailure(e);
-            }
+        protected void onFinish() {
+            long checkpoint = transformTask.currentCheckpoint.incrementAndGet();
+            transformTask.taskState.set(DataFrameTransformTaskState.STOPPED);
+            DataFrameTransformState state = new DataFrameTransformState(DataFrameTransformTaskState.STOPPED,
+                    IndexerState.STOPPED,
+                    transformTask.indexer.get().getPosition(),
+                    checkpoint,
+                    transformTask.stateReason.get(),
+                    transformTask.indexer.get().getProgress());
+
+            String transformId = transformTask.transform.getId();
+            auditor.info(transformId, "Finished indexing for data frame transform checkpoint [" + checkpoint + "]");
+            logger.info("Finished indexing for data frame transform [" + transformId + "] checkpoint [" + checkpoint + "]");
+
+            super.onFinish();
+
+            transformTask.persistStateToClusterState(state, ActionListener.wrap(
+                    task -> {
+                        auditor.info(transformTask.transform.getId(), "data frame transform [" + transformTask.transform.get() + "] finished");
+                        transformTask.markAsCompleted();
+                    },
+                    exc -> {
+                        logger.error(
+                                new ParameterizedMessage("error updating state for data frame transform [{}] on finish", transformId), exc);
+                        transformTask.markAsCompleted();
+                    }
+            ));
         }
 
         @Override
