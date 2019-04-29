@@ -579,15 +579,19 @@ public class RollupIndexerIndexingTests extends AggregatorTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
+        protected void onFinish() {
             latch.countDown();
-            listener.onResponse(null);
         }
 
         @Override
         protected void onAbort() {
             assert false : "onAbort should not be called";
         }
+
+        @Override
+        protected void onStop() {
+        }
+
 
         @Override
         protected void onFailure(Exception e) {

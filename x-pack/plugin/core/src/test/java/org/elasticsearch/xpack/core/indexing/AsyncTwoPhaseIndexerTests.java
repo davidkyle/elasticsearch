@@ -117,6 +117,10 @@ public class AsyncTwoPhaseIndexerTests extends ESTestCase {
         }
 
         @Override
+        protected void onStop() {
+        }
+
+        @Override
         protected void onAbort() {
         }
 
@@ -185,6 +189,10 @@ public class AsyncTwoPhaseIndexerTests extends ESTestCase {
         @Override
         protected void onFinish() {
             fail("should not be called");
+        }
+
+        @Override
+        protected void onStop() {
         }
 
         @Override

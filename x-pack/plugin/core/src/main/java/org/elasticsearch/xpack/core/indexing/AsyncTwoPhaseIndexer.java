@@ -249,6 +249,12 @@ public abstract class AsyncTwoPhaseIndexer<JobPosition, JobStats extends Indexer
      */
     protected abstract void onFinish();
 
+
+    /**
+     * Called when the indexer has finished after a call to {@link #stop()}
+     */
+    protected abstract void onStop();
+
     /**
      * Called when a background job detects that the indexer is aborted causing the
      * async execution to stop.
@@ -312,8 +318,8 @@ public abstract class AsyncTwoPhaseIndexer<JobPosition, JobStats extends Indexer
                 logger.debug("Finished indexing for job [" + getJobId() + "], saving state and shutting down.");
 
                 // execute finishing tasks
-                onFinish();
                 doSaveState(finishAndSetState(), position.get(), () -> {});
+                onFinish();
                 return;
             }
 
@@ -385,6 +391,7 @@ public abstract class AsyncTwoPhaseIndexer<JobPosition, JobStats extends Indexer
         case STOPPING:
             logger.info("Indexer job encountered [" + IndexerState.STOPPING + "] state, halting indexer.");
             doSaveState(finishAndSetState(), getPosition(), () -> {});
+            onStop();
             return false;
 
         case STOPPED:

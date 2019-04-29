@@ -9,7 +9,6 @@ package org.elasticsearch.xpack.dataframe.transforms;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.util.SetOnce;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkAction;
@@ -285,14 +284,8 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
      * cleanup operations in the future
      */
     synchronized void shutdown() {
-        try {
-            logger.info("Data frame indexer [" + transform.getId() + "] received abort request, stopping indexer.");
-            schedulerEngine.remove(SCHEDULE_NAME + "_" + transform.getId());
-            schedulerEngine.unregister(this);
-        } catch (Exception e) {
-            markAsFailed(e);
-            return;
-        }
+        schedulerEngine.remove(SCHEDULE_NAME + "_" + transform.getId());
+        schedulerEngine.unregister(this);
 
         markAsCompleted();
     }
@@ -343,9 +336,8 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
     public synchronized void onCancelled() {
         logger.info(
                 "Received cancellation request for data frame transform [" + transform.getId() + "], state: [" + taskState.get() + "]");
-        if (getIndexer() != null && getIndexer().abort()) {
-            // there is no background transform running, we can shutdown safely
-            shutdown();
+        if (getIndexer() != null) {
+            getIndexer().abort();
         }
     }
 
@@ -635,19 +627,16 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
             auditor.info(transformId, "Finished indexing for data frame transform checkpoint [" + checkpoint + "]");
             logger.info("Finished indexing for data frame transform [" + transformId + "] checkpoint [" + checkpoint + "]");
 
-            super.onFinish();
+            transformTask.shutdown();
 
-            transformTask.persistStateToClusterState(state, ActionListener.wrap(
-                    task -> {
-                        auditor.info(transformTask.transform.getId(), "data frame transform [" + transformTask.transform.get() + "] finished");
-                        transformTask.markAsCompleted();
-                    },
-                    exc -> {
-                        logger.error(
-                                new ParameterizedMessage("error updating state for data frame transform [{}] on finish", transformId), exc);
-                        transformTask.markAsCompleted();
-                    }
-            ));
+            super.onFinish();
+        }
+
+        @Override
+        protected void onStop() {
+            auditor.info(transformConfig.getId(), "Received stop request, stopping indexer");
+            logger.info("Data frame transform [" + transformConfig.getId() + "] received stop request, stopping indexer");
+            transformTask.shutdown();
         }
 
         @Override
@@ -694,6 +683,7 @@ public class DataFrameTransformTask extends AllocatedPersistentTask implements S
         protected void failIndexer(String failureMessage) {
             logger.error("Data frame transform [" + getJobId() + "]:" + failureMessage);
             auditor.error(transformTask.getTransformId(), failureMessage);
+
             transformTask.markAsFailed(failureMessage, ActionListener.wrap(
                 r -> {
                     // Successfully marked as failed, reset counter so that task can be restarted

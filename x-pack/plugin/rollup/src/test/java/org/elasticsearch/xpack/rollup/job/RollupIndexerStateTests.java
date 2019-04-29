@@ -125,8 +125,11 @@ public class RollupIndexerStateTests extends ESTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
-            listener.onResponse(null);
+        protected void onFinish() {
+        }
+
+        @Override
+        protected void onStop() {
         }
     }
 
@@ -223,8 +226,12 @@ public class RollupIndexerStateTests extends ESTestCase {
         }
 
         @Override
-        protected void onFinish(ActionListener<Void> listener) {
-            listener.onResponse(null);
+        protected void onFinish() {
+        }
+
+        @Override
+        protected void onStop() {
+
         }
     }
 
@@ -258,11 +265,9 @@ public class RollupIndexerStateTests extends ESTestCase {
             AtomicBoolean isFinished = new AtomicBoolean(false);
             DelayedEmptyRollupIndexer indexer = new DelayedEmptyRollupIndexer(executor, job, state, null) {
                 @Override
-                protected void onFinish(ActionListener<Void> listener) {
-                    super.onFinish(ActionListener.wrap(r -> {
-                        listener.onResponse(r);
-                        isFinished.set(true);
-                    }, listener::onFailure));
+                protected void onFinish() {
+                    isFinished.set(true);
+                    super.onFinish();
                 }
             };
             final CountDownLatch latch = indexer.newLatch();
@@ -307,11 +312,9 @@ public class RollupIndexerStateTests extends ESTestCase {
             AtomicBoolean isFinished = new AtomicBoolean(false);
             DelayedEmptyRollupIndexer indexer = new DelayedEmptyRollupIndexer(executor, job, state, null, spyStats) {
                 @Override
-                protected void onFinish(ActionListener<Void> listener) {
-                    super.onFinish(ActionListener.wrap(r -> {
-                        listener.onResponse(r);
-                        isFinished.set(true);
-                    }, listener::onFailure));
+                protected void onFinish() {
+                    isFinished.set(true);
+                    super.onFinish();
                 }
             };
             final CountDownLatch latch = indexer.newLatch();
@@ -338,7 +341,7 @@ public class RollupIndexerStateTests extends ESTestCase {
         try {
             EmptyRollupIndexer indexer = new EmptyRollupIndexer(executor, job, state, null) {
                 @Override
-                protected void onFinish(ActionListener<Void> listener) {
+                protected void onFinish() {
                     fail("Should not have called onFinish");
                 }
 

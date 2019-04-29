@@ -170,6 +170,10 @@ public class DataFrameIndexerTests extends ESTestCase {
         }
 
         @Override
+        protected void onStop() {
+        }
+
+        @Override
         protected void onAbort() {
             fail("onAbort should not be called");
         }
