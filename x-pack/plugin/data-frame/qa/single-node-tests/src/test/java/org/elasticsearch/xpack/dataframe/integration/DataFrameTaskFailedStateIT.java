@@ -60,7 +60,7 @@ public class DataFrameTaskFailedStateIT extends DataFrameRestTestCase {
         // Force start the data frame to indicate failure correction
         startDataframeTransform(transformId, true);
         // Wait for data to be indexed appropriately and refresh for search
-        waitForDataFrameCheckpoint(transformId);
+        waitForDataFrameStopped(transformId);
         refreshIndex(dataFrameIndex);
 
         // Verify that we have started and that our reason is cleared
