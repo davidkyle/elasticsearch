@@ -28,6 +28,10 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.action.ActionModule;
 import org.elasticsearch.action.ActionType;
+<<<<<<< HEAD
+=======
+import org.elasticsearch.action.admin.cluster.snapshots.status.TransportNodesSnapshotsStatus;
+>>>>>>> Add Client to Processor.Parameters
 import org.elasticsearch.action.search.SearchExecutionStatsCollector;
 import org.elasticsearch.action.search.SearchPhaseController;
 import org.elasticsearch.action.search.SearchTransportService;
