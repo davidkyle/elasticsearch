@@ -96,7 +96,7 @@ public class IngestService implements ClusterStateApplier {
         this.scriptService = scriptService;
         this.processorFactories = processorFactories(
             ingestPlugins,
-            new Processor.Parameters(
+                new Processor.Parameters(
                 env, scriptService, analysisRegistry,
                 threadPool.getThreadContext(), threadPool::relativeTimeInMillis,
                 (delay, command) -> threadPool.schedule(
