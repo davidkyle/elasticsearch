@@ -28,10 +28,6 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.action.ActionModule;
 import org.elasticsearch.action.ActionType;
-<<<<<<< HEAD
-=======
-import org.elasticsearch.action.admin.cluster.snapshots.status.TransportNodesSnapshotsStatus;
->>>>>>> Add Client to Processor.Parameters
 import org.elasticsearch.action.search.SearchExecutionStatsCollector;
 import org.elasticsearch.action.search.SearchPhaseController;
 import org.elasticsearch.action.search.SearchTransportService;
@@ -370,7 +366,8 @@ public class Node implements Closeable {
                     new ConsistentSettingsService(settings, clusterService, settingsModule.getConsistentSettings())
                             .newHashPublisher());
             final IngestService ingestService = new IngestService(clusterService, threadPool, this.environment,
-                scriptModule.getScriptService(), analysisModule.getAnalysisRegistry(), pluginsService.filterPlugins(IngestPlugin.class));
+                scriptModule.getScriptService(), analysisModule.getAnalysisRegistry(), pluginsService.filterPlugins(IngestPlugin.class),
+                    client);
             final ClusterInfoService clusterInfoService = newClusterInfoService(settings, clusterService, threadPool, client);
             final UsageService usageService = new UsageService();
 
