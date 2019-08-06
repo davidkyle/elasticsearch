@@ -629,7 +629,8 @@ public class MachineLearning extends Plugin implements ActionPlugin, AnalysisPlu
     }
 
     private Map<String, ModelLoader> getModelLoaders(Client client) {
-        return Map.of("silly", new SillyModelLoader(client), "lang_ident", new LangIdentModelLoader());
+        return Map.of(SillyModelLoader.MODEL_TYPE, new SillyModelLoader(client),
+                LangIdentModelLoader.MODEL_TYPE, new LangIdentModelLoader());
     }
 
     @Override
