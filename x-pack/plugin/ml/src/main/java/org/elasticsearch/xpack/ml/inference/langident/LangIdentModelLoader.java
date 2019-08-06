@@ -17,6 +17,8 @@ import static org.elasticsearch.ingest.ConfigurationUtils.readStringProperty;
 
 public class LangIdentModelLoader implements ModelLoader {
 
+    public static final String MODEL_TYPE = "lang_ident";
+
     public static final String FIELD = "field";
     public static final String TARGET_LANGUAGE_FIELD = "target_language_field";
     public static final String TARGET_PROBABILITY_FIELD = "target_probability_field";
