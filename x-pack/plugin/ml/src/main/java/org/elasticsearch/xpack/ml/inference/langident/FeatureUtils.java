@@ -6,11 +6,7 @@
 
 package org.elasticsearch.xpack.ml.inference.langident;
 
-import org.apache.logging.log4j.message.ParameterizedMessage;
-import org.apache.logging.log4j.util.Supplier;
-
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -195,7 +191,8 @@ public class FeatureUtils {
             boolean isIdeographic = Character.isIdeographic(codepoint);
             Character.UnicodeBlock unicodeBlock = Character.UnicodeBlock.of(codepoint);
 
-            sb.append(String.format("%d|%b,%b,%b,%b,%s|", codepoint, isLetter, isSupplementaryCodePoint, isSpaceChar, isIdeographic, unicodeBlock.toString()));
+            sb.append(String.format("%d|%b,%b,%b,%b,%s|", codepoint, isLetter, isSupplementaryCodePoint,
+             isSpaceChar, isIdeographic, unicodeBlock.toString()));
 
             offset += Character.charCount(codepoint);
         }
@@ -204,11 +201,11 @@ public class FeatureUtils {
             byte[] bytes = text.getBytes("UTF-8");
             StringBuilder sb = new StringBuilder();
             for (byte b : bytes) {
-                sb.append(String.format("%02X", b));
+                sb.append(String.format(Locale.ROOT, "%02X", b));
             }
             return sb.toString();
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         return "";
     }

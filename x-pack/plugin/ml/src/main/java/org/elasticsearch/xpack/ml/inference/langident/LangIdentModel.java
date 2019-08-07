@@ -29,7 +29,7 @@ final class LangIdentModel implements Model {
     private final String targetIsReliableField;
     private final boolean ignoreMissing;
 
-    public LangIdentModel(String field,
+    LangIdentModel(String field,
                           String targetLanguageField, String targetProbabilityField,
                           String targetTopProbabilitiesField, String targetIsReliableField,
                           boolean ignoreMissing) {
@@ -71,7 +71,7 @@ final class LangIdentModel implements Model {
             }
             if (targetTopProbabilitiesField != null) {
                 ingestDocument.setFieldValue(targetTopProbabilitiesField, result.getTopProbabilities().toString());
-            }+
+            }
             if (targetIsReliableField != null) {
                 ingestDocument.setFieldValue(targetIsReliableField, result.isReliable());
             }
@@ -81,24 +81,5 @@ final class LangIdentModel implements Model {
         }
 
         handler.accept(ingestDocument, null);
-    }
-
-    public NNetLanguageIdentifier.Result identifyLanguage(String text) {
-        NNetLanguageIdentifier.Result result = null;
-
-        if (languageIdentifier == null) {
-            logger.error("Language identifier model not initialised - unknown language returned");
-            return new NNetLanguageIdentifier.Result();
-        }
-
-        try {
-            result = languageIdentifier.findLanguage(text);
-        } catch (Exception e) {
-            logger.error((Supplier<?>) () -> new ParameterizedMessage(
-                "Error identifjying language [{}]", text), e);
-            result = new NNetLanguageIdentifier.Result();
-        }
-
-        return result;
     }
 }

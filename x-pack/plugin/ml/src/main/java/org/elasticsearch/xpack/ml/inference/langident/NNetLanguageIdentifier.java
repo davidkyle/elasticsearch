@@ -7,7 +7,11 @@
 package org.elasticsearch.xpack.ml.inference.langident;
 
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class NNetLanguageIdentifier {
     public static final int kMaxNumInputBytesToConsider = 10000;
@@ -50,7 +54,7 @@ public class NNetLanguageIdentifier {
 
         return features;
     }
-
+/*
     private void dumpFeatures(String text, ArrayList<FeatureVector> featureVectors) {
         System.out.println("'" + text + "'" + text.length() + "{");
         System.out.println("features:" + featureVectors.size());
@@ -67,6 +71,7 @@ public class NNetLanguageIdentifier {
         }
         System.out.println("}");
     }
+*/
 
     private Result findLanguageOfValidUTF8(String text) throws Exception {
         // Create the feature vector with it actually a list
@@ -123,7 +128,7 @@ public class NNetLanguageIdentifier {
     }
 
     public static class Result {
-        public final static int TOP_N = 5;
+        public static final int TOP_N = 5;
 
         private final String language;
         private final float probability;
