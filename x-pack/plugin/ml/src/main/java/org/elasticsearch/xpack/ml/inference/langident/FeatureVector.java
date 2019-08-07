@@ -54,16 +54,16 @@ public class FeatureVector {
         private final FeatureType featureType;
         private final long featureValue;
 
-        public Element(FeatureType featureType, long featureValue) {
+        Element(FeatureType featureType, long featureValue) {
             this.featureType = featureType;
             this.featureValue = featureValue;
         }
 
-        public FeatureType getFeatureType() {
+        FeatureType getFeatureType() {
             return featureType;
         }
 
-        public long getFeatureValue() {
+        long getFeatureValue() {
             return featureValue;
         }
     }

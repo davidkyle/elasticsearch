@@ -6,15 +6,11 @@
 
 package org.elasticsearch.xpack.ml.inference.langident;
 
-import java.io.File;
+import org.apache.commons.codec.Charsets;
+
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
-/**
- *
- */
 public class NNetParams extends EmbeddingNetworkParams {
     private static final int EMBEDDINGS_SIZE = 6;
     private static final int EMBEDDING_NUM_FEATURES_SIZE = 6;
@@ -111,7 +107,7 @@ public class NNetParams extends EmbeddingNetworkParams {
     }
 
     private static short[] readFileToShortArray(String path) throws FileNotFoundException {
-        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path));
+        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path), Charsets.UTF_8);
         // Read first entry (array size) as integer
         short[] array = new short[s.nextInt()];
         for (int i = 0; i < array.length; i++) {
@@ -121,7 +117,7 @@ public class NNetParams extends EmbeddingNetworkParams {
     }
 
     private static char[] readFileToCharArray(String path) throws FileNotFoundException {
-        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path));
+        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path), Charsets.UTF_8);
         // Read first entry (array size) as integer
         char[] array = new char[s.nextInt()];
         for (int i = 0; i < array.length; i++) {
@@ -132,7 +128,7 @@ public class NNetParams extends EmbeddingNetworkParams {
     }
 
     private static float[] readFileToFloatArray(String path) throws FileNotFoundException {
-        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path));
+        Scanner s = new Scanner(NNetParams.class.getResourceAsStream(path), Charsets.UTF_8);
         // Read first entry (array size) as integer
         float[] array = new float[s.nextInt()];
         for (int i = 0; i < array.length; i++) {
@@ -143,7 +139,6 @@ public class NNetParams extends EmbeddingNetworkParams {
                 array[i] = f;
             } catch (Exception e) {
                 // TODO resolve error
-                System.out.println("Can not parse to float '" + text + "'" + e.toString());
                 throw e;
             }
         }

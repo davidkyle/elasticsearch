@@ -6,9 +6,6 @@
 
 package org.elasticsearch.xpack.ml.inference.langident;
 
-/**
- *
- */
 public abstract class EmbeddingNetworkParams {
     public enum QuantizationType {
         NONE,

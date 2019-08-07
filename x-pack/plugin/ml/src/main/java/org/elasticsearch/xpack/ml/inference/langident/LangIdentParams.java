@@ -7,7 +7,7 @@
 package org.elasticsearch.xpack.ml.inference.langident;
 
 public class LangIdentParams {
-    public final static String kLanguageNames[] = {
+    public static final String kLanguageNames[] = {
         "eo", "co", "eu", "ta", "de", "mt", "ps", "te", "su", "uz", "zh-Latn", "ne",
         "nl", "sw", "sq", "hmn", "ja", "no", "mn", "so", "ko", "kk", "sl", "ig",
         "mr", "th", "zu", "ml", "hr", "bs", "lo", "sd", "cy", "hy", "uk", "pt",

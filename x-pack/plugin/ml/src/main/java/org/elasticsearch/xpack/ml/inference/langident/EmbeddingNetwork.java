@@ -6,7 +6,9 @@
 
 package org.elasticsearch.xpack.ml.inference.langident;
 
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Classifier using a hand-coded feed-forward neural network.
