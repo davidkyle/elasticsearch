@@ -4,13 +4,17 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-package org.elasticsearch.xpack.ml.inference;
+package org.elasticsearch.xpack.ml.inference.AysncModel;
 
 import org.elasticsearch.ingest.IngestDocument;
+import org.elasticsearch.xpack.ml.inference.Model;
 
 import java.util.function.BiConsumer;
 
-public interface Model {
+public class AsyncModel implements Model {
 
-    void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler);
+    @Override
+    public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
+
+    }
 }
