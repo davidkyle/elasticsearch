@@ -26,7 +26,7 @@ public class LangIdentModelLoader implements ModelLoader {
     public static final String TARGET_IS_RELIABLE_FIELD = "target_is_reliable_field";
 
     @Override
-    public void readConfiguration(String processorTag, Map<String, Object> config) {
+    public void consumeConfiguration(String processorTag, Map<String, Object> config) {
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, FIELD, null);
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, TARGET_LANGUAGE_FIELD, null);
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, TARGET_PROBABILITY_FIELD, null);

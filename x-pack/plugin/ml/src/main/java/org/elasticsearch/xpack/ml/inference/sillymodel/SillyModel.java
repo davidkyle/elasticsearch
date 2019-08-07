@@ -11,6 +11,7 @@ import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.xpack.ml.inference.Model;
 
 import java.util.Random;
+import java.util.function.BiConsumer;
 
 public class SillyModel implements Model {
 
@@ -19,11 +20,12 @@ public class SillyModel implements Model {
     private Random random;
 
     public SillyModel(BytesReference model) {
-        random = new Random();
+        random = org.elasticsearch.common.Randomness.get();
     }
 
-    public IngestDocument infer(IngestDocument document) {
+    @Override
+    public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
         document.setFieldValue(TARGET_FIELD, random.nextBoolean() ? "hotdog" : "not");
-        return document;
+        handler.accept(document, null);
     }
 }
