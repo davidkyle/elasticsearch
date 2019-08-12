@@ -6,15 +6,32 @@
 
 package org.elasticsearch.xpack.ml.inference.AysncModel;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.xpack.ml.inference.Model;
 
 import java.util.function.BiConsumer;
 
-public class AsyncModel implements Model {
+public abstract class AsyncModel implements Model {
+
+
+    private final AsyncModelLoader loader;
+
+
+    public AsyncModel(AsyncModelLoader loader) {
+        this.loader = loader;
+
+        if (loader.isLoadedSucessfully()) {
+            createModel(loader.getGetResponse());
+        } else {
+            // register
+        }
+    }
 
     @Override
     public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
 
     }
+
+    protected abstract void createModel(GetResponse getResponse);
 }
