@@ -13,6 +13,15 @@ import java.util.function.BiConsumer;
 
 public class AsyncModel implements Model {
 
+
+    private final AsyncModelLoader loader;
+
+
+    public AsyncModel(AsyncModelLoader loader) {
+        this.loader = loader;
+    }
+
+
     @Override
     public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
 
