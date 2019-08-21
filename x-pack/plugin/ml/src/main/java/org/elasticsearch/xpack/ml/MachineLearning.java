@@ -203,6 +203,8 @@ import org.elasticsearch.xpack.ml.dataframe.process.NativeAnalyticsProcessFactor
 import org.elasticsearch.xpack.ml.inference.InferenceProcessor;
 import org.elasticsearch.xpack.ml.inference.ModelLoader;
 import org.elasticsearch.xpack.ml.inference.sillymodel.SillyModelLoader;
+import org.elasticsearch.xpack.ml.inference.tree.Tree;
+import org.elasticsearch.xpack.ml.inference.tree.TreeModelLoader;
 import org.elasticsearch.xpack.ml.job.JobManager;
 import org.elasticsearch.xpack.ml.job.JobManagerHolder;
 import org.elasticsearch.xpack.ml.job.UpdateJobProcessNotifier;
@@ -628,7 +630,8 @@ public class MachineLearning extends Plugin implements ActionPlugin, AnalysisPlu
     }
 
     private Map<String, ModelLoader> getModelLoaders(Client client) {
-        return Map.of(SillyModelLoader.MODEL_TYPE, new SillyModelLoader(client));
+        return Map.of(SillyModelLoader.MODEL_TYPE, new SillyModelLoader(client),
+                TreeModelLoader.MODEL_TYPE, new TreeModelLoader(client));
     }
 
     @Override
