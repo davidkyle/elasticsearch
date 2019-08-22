@@ -132,8 +132,9 @@ public class EmbeddingNetwork {
         private float shortToFloat(short s) {
             // We fill in the new mantissa bits with 0, and don't do anything smarter.
             int i = (s << 16);
+            return (float) s;
 
-            return Float.intBitsToFloat(i);
+//            return Float.intBitsToFloat(i);
         }
 
         float getQuantScales(int row) {

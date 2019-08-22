@@ -17,10 +17,7 @@ public class FeatureUtils {
     // required so features align with cld3 models
     public static int Hash32WithDefaultSeed(String input) throws UnsupportedEncodingException {
         byte[] bytes = input.getBytes("UTF8");
-
-        int h = Hash32(bytes, bytes.length, 0xBEEF);
-
-        return h;
+        return  Hash32(bytes, bytes.length, 0xBEEF);
     }
 
     private static int Hash32(byte[] data, int n, int seed) {
@@ -178,38 +175,5 @@ public class FeatureUtils {
         String ret = newText.toLowerCase(Locale.ROOT);
 
         return ret;
-    }
-
-    // Debug UTF8 bytes
-    public static String toUTF8ByteString(String text) {
-        /*
-        StringBuilder sb = new StringBuilder();
-        final int length = text.length();
-        for (int offset = 0; offset < length; ) {
-            final int codepoint = text.codePointAt(offset);
-
-            boolean isLetter = Character.isLetter(codepoint);
-            boolean isSupplementaryCodePoint = Character.isSupplementaryCodePoint(codepoint);
-            boolean isSpaceChar = Character.isSpaceChar(codepoint);
-            boolean isIdeographic = Character.isIdeographic(codepoint);
-            Character.UnicodeBlock unicodeBlock = Character.UnicodeBlock.of(codepoint);
-
-            sb.append(String.format("%d|%b,%b,%b,%b,%s|", codepoint, isLetter, isSupplementaryCodePoint,
-             isSpaceChar, isIdeographic, unicodeBlock.toString()));
-
-            offset += Character.charCount(codepoint);
-        }
-        */
-        try {
-            byte[] bytes = text.getBytes("UTF-8");
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format(Locale.ROOT, "%02X", b));
-            }
-            return sb.toString();
-        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-        }
-        return "";
     }
 }
