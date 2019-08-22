@@ -17,6 +17,7 @@ import static org.elasticsearch.ingest.ConfigurationUtils.readStringProperty;
 
 public class LangIdentModelLoader implements ModelLoader {
 
+    public static final String MODEL_TYPE = "lang_ident";
     public static final String FIELD = "field";
     public static final String TARGET_LANGUAGE_FIELD = "target_language_field";
     public static final String TARGET_PROBABILITY_FIELD = "target_probability_field";
@@ -24,7 +25,7 @@ public class LangIdentModelLoader implements ModelLoader {
     public static final String TARGET_IS_RELIABLE_FIELD = "target_is_reliable_field";
 
     @Override
-    public void readConfiguration(String processorTag, Map<String, Object> config) {
+    public void consumeConfiguration(String processorTag, Map<String, Object> config) {
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, FIELD, null);
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, TARGET_LANGUAGE_FIELD, null);
         readStringProperty(InferenceProcessor.TYPE, processorTag, config, TARGET_PROBABILITY_FIELD, null);

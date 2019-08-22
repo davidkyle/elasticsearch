@@ -13,7 +13,6 @@ public class ContinuousBagOfNGramsFeature {
 
     // Extract features from text and add to feature vector
     // NOTE: input text is assumed to be normalised (e.g. " this text is written in english")
-    // TODO - manage exception handling
     public static FeatureVector getNGramFeatureValue(String text,
                                                      int nGramSize,
                                                      int idDimension) throws Exception {
@@ -75,10 +74,6 @@ public class ContinuousBagOfNGramsFeature {
             int id = Integer.remainderUnsigned(FeatureUtils.Hash32WithDefaultSeed(key), idDimension);
 
             result.add(type, FeatureVector.FeatureValue.getFeatureValue(id, weight));
-
-            //System.out.println(key + " " + id + " " + value + " " + countSum + " " +
-            //    FeatureUtils.Hash32WithDefaultSeed(key) + " " + weight + " " +
-            //    Long.toUnsignedString(FeatureVector.FeatureValue.getFeatureValue(id, weight)));
         }
 
         return result;

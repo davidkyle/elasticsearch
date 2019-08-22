@@ -21,10 +21,7 @@ public class FeatureUtils {
     // required so features align with cld3 models
     public static int Hash32WithDefaultSeed(String input) throws UnsupportedEncodingException {
         byte[] bytes = input.getBytes("UTF8");
-
-        int h = Hash32(bytes, bytes.length, 0xBEEF);
-
-        return h;
+        return  Hash32(bytes, bytes.length, 0xBEEF);
     }
 
     private static int Hash32(byte[] data, int n, int seed) {

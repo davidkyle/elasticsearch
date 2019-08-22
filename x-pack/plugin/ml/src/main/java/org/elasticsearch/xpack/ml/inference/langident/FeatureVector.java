@@ -68,7 +68,7 @@ public class FeatureVector {
         }
     }
 
-    // Feature values can we discrete or continuous
+    // Feature values can be discrete or continuous
     public static class FeatureValue {
         // Create a discrete value from a continuous value
         public static long getFeatureValue(int id, float weight) {
