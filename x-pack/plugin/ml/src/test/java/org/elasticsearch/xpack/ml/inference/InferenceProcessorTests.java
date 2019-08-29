@@ -24,7 +24,6 @@ public class InferenceProcessorTests extends ESTestCase {
     public void testFactory() throws Exception {
         String processorTag = randomAlphaOfLength(10);
         String modelType = "test";
-        
         Model mockModel = mock(Model.class);
         ModelLoader mockLoader = mock(ModelLoader.class);
         when(mockLoader.load(eq("k2"), eq(processorTag), eq(false), any())).thenReturn(mockModel);

@@ -1,3 +1,9 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License;
+ * you may not use this file except in compliance with the Elastic License.
+ */
+
 package org.elasticsearch.xpack.ml.inference.tree;
 
 import java.util.ArrayList;
@@ -105,7 +111,7 @@ public class Tree {
             this(-1, -1, -1, false, value);
         }
 
-        boolean isLeaf() {
+        public boolean isLeaf() {
             return leftChild < 1;
         }
 
@@ -122,8 +128,20 @@ public class Tree {
             return feature == null;
         }
 
-        Double value() {
+        public Double value() {
             return thresholdValue;
+        }
+
+        public int getFeatureIndex() {
+            return featureIndex;
+        }
+
+        public int getLeftChild() {
+            return leftChild;
+        }
+
+        public int getRightChild() {
+            return rightChild;
         }
 
         @Override

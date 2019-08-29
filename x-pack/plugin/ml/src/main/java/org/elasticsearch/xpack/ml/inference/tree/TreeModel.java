@@ -1,7 +1,15 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License;
+ * you may not use this file except in compliance with the Elastic License.
+ */
+
 package org.elasticsearch.xpack.ml.inference.tree;
 
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.xpack.ml.inference.Model;
+
+import java.util.function.BiConsumer;
 
 public class TreeModel implements Model {
 
@@ -15,9 +23,9 @@ public class TreeModel implements Model {
     }
 
     @Override
-    public IngestDocument infer(IngestDocument document) {
+    public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
         Double prediction = ensemble.predictFromDoc(document.getSourceAndMetadata());
         document.setFieldValue(targetFieldName, prediction);
-        return document;
+        handler.accept(document, null);
     }
 }

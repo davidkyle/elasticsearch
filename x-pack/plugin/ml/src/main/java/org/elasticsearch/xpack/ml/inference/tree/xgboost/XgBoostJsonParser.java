@@ -1,3 +1,10 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License;
+ * you may not use this file except in compliance with the Elastic License.
+ */
+
+
 package org.elasticsearch.xpack.ml.inference.tree.xgboost;
 
 import org.elasticsearch.xpack.ml.inference.tree.Tree;
@@ -13,8 +20,6 @@ public class XgBoostJsonParser {
     private static String SPLIT = "split";
     private static String SPLIT_CONDITION = "split_condition";
     private static String CHILDREN = "children";
-
-//    private static Logger logger = LogManager.getLogger(XgBoostJsonParser.class);
 
 
     public static TreeEnsembleModel parse(List<Map<String, Object>> json, Map<String, Integer> featureMap) throws IOException {
@@ -69,6 +74,12 @@ public class XgBoostJsonParser {
                 throw new IOException("field [SPLIT_CONDITION] in node [" + nodeId + "] is not a double");
             }
 
+            // Fortunately XGBoost numbers the nodes the same way we do (breath first)
+            // Assuming a 1 based index a non-leaf node at index X will have its child nodes
+            // at indices 2X and 2X +1 (in practice we are using a zero based index so adjust
+            // accordingly). XGBoost uses the same numbering system so we don't have to point
+            // the child indices somewhere else on the new node, the child nodes will
+            // automatically slot in the in right place.
             treeBuilder.addJunction(nodeId, featureIndex, true, threshold);
 
             for (Map<String, Object> child : children) {
