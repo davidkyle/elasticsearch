@@ -14,6 +14,7 @@ import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.xpack.ml.inference.Model;
 
 import java.io.FileNotFoundException;
+import java.util.function.BiConsumer;
 
 final class LangIdentModel implements Model {
 
@@ -49,13 +50,14 @@ final class LangIdentModel implements Model {
     }
 
     @Override
-    public IngestDocument infer(IngestDocument ingestDocument) {
+    public void infer(IngestDocument ingestDocument, BiConsumer<IngestDocument, Exception> handler) {
         String text = ingestDocument.getFieldValue(field, String.class, ignoreMissing);
         if (text == null && ignoreMissing) {
-            return ingestDocument;
+            handler.accept(ingestDocument, null);
+            return;
         } else if (text == null) {
-            throw new IllegalArgumentException("field [" + field + "] is null, " +
-                    "cannot identify language as source field is missing.");
+            handler.accept(null, new IllegalArgumentException("field [" + field + "] is null, " +
+                    "cannot identify language as source field is missing."));
         }
 
         try {
@@ -69,14 +71,16 @@ final class LangIdentModel implements Model {
             }
             if (targetTopProbabilitiesField != null) {
                 ingestDocument.setFieldValue(targetTopProbabilitiesField, result.getTopProbabilities().toString());
-            }
+            }+
             if (targetIsReliableField != null) {
                 ingestDocument.setFieldValue(targetIsReliableField, result.isReliable());
             }
         } catch (Exception e) {
             logger.error("failed to find language", e);
+            handler.accept(null, e);
         }
-        return ingestDocument;
+
+        handler.accept(ingestDocument, null);
     }
 
     public NNetLanguageIdentifier.Result identifyLanguage(String text) {
