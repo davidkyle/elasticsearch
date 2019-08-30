@@ -62,8 +62,10 @@ public class Tree {
     }
 
     /**
-     * Finds null nodes
-     * @return List of indexes to null nodes
+     * Finds {@code null} nodes. If constructed properly there should be no {@code null} nodes.
+     * {@code null} nodes indicates missing leaf or junction nodes
+     *
+     * @return List of indexes to the {@code null} nodes
      */
     List<Integer> missingNodes() {
         List<Integer> nullNodeIndices = new ArrayList<>();
@@ -185,8 +187,6 @@ public class Tree {
          * @return The created node
          */
         public Node addJunction(int nodeIndex, int featureIndex, boolean isDefaultLeft, double decisionThreshold) {
-//            assert nodeIndex < nodes.size() : "node index " + nodeIndex + " >= size " + nodes.size();
-
             int leftChild = numNodes++;
             int rightChild = numNodes++;
             nodes.ensureCapacity(nodeIndex +1);
@@ -194,13 +194,13 @@ public class Tree {
                 nodes.add(null);
             }
 
-
             Node node = new Node(leftChild, rightChild, featureIndex, isDefaultLeft, decisionThreshold);
             nodes.set(nodeIndex, node);
+
             // allocate space for the child nodes
-            nodes.add(null);
-            nodes.add(null);
-//            assert nodes.size() == numNodes : "nodes size " + nodes.size() + " !=  num nodes " + numNodes;
+            while (nodes.size() <= rightChild) {
+                nodes.add(null);
+            }
 
             return node;
         }
@@ -212,15 +212,11 @@ public class Tree {
          * @return this
          */
         public TreeBuilder addLeaf(int nodeIndex, double value) {
-//            assert nodeIndex < nodes.size();
-
             for (int i=nodes.size(); i<nodeIndex +1; i++) {
                 nodes.add(null);
             }
 
-
-
-            assert nodes.get(nodeIndex) == null;
+            assert nodes.get(nodeIndex) == null : "expected null value at index " + nodeIndex;
 
             nodes.set(nodeIndex, new Node(value));
             return this;

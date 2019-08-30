@@ -58,6 +58,9 @@ public class XgBoostJsonParserTests extends ESTestCase {
 
             double prediction = model.predict(doc);
             assertEquals(-6.23624468, prediction, 0.0001);
+
+            List<Integer> missingNodes = model.checkForNull();
+            assertThat(missingNodes, hasSize(0));
         }
     }
 
@@ -307,8 +310,7 @@ public class XgBoostJsonParserTests extends ESTestCase {
             assertEquals(2, model.numTrees());
 
             List<Integer> missingNodes = model.checkForNull();
-            // TODO we are adding more nodes than are actually used
-//            assertThat(missingNodes, hasSize(0));
+            assertThat(missingNodes, hasSize(0));
 
             Map<String, Double> doc = new HashMap<>();
             doc.put("f0", 10.36);

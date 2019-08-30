@@ -6,9 +6,6 @@
 
 package org.elasticsearch.xpack.ml.inference.tree;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,8 +14,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class TreeEnsembleModel {
-
-    private static Logger logger = LogManager.getLogger(TreeEnsembleModel.class);
 
     private final List<Tree> trees;
     private final Map<String, Integer> featureMap;
