@@ -6,9 +6,10 @@
 
 package org.elasticsearch.xpack.ml.inference.sillymodel;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.common.Randomness;
 import org.elasticsearch.ingest.IngestDocument;
-import org.elasticsearch.xpack.ml.inference.Model;
+import org.elasticsearch.xpack.ml.inference.AsyncModel.AsyncModel;
 
 import java.util.Random;
 import java.util.function.BiConsumer;
@@ -16,18 +17,25 @@ import java.util.function.BiConsumer;
 /**
  * Trivial model whose only purpose is to aid code design
  */
-public class SillyModel implements Model {
+public class SillyModel extends AsyncModel {
 
     private static final String TARGET_FIELD = "hotdog_or_not";
 
     private final Random random;
 
-    public SillyModel() {
+    public SillyModel(boolean ignoreMissing) {
+        super(ignoreMissing);
         random = Randomness.get();
     }
 
-    public void infer(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
+    @Override
+    public void inferPrivate(IngestDocument document, BiConsumer<IngestDocument, Exception> handler) {
         document.setFieldValue(TARGET_FIELD, random.nextBoolean() ? "hotdog" : "not");
         handler.accept(document, null);
+    }
+
+    @Override
+    protected void createModel(GetResponse getResponse) {
+
     }
 }
