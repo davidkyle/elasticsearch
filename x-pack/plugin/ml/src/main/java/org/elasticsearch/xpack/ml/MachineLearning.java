@@ -202,6 +202,7 @@ import org.elasticsearch.xpack.ml.dataframe.process.NativeMemoryUsageEstimationP
 import org.elasticsearch.xpack.ml.dataframe.process.NativeAnalyticsProcessFactory;
 import org.elasticsearch.xpack.ml.inference.InferenceProcessor;
 import org.elasticsearch.xpack.ml.inference.ModelLoader;
+import org.elasticsearch.xpack.ml.inference.langident.LangIdentModelLoader;
 import org.elasticsearch.xpack.ml.inference.sillymodel.SillyModelLoader;
 import org.elasticsearch.xpack.ml.job.JobManager;
 import org.elasticsearch.xpack.ml.job.JobManagerHolder;
@@ -628,7 +629,8 @@ public class MachineLearning extends Plugin implements ActionPlugin, AnalysisPlu
     }
 
     private Map<String, ModelLoader> getModelLoaders(Client client) {
-        return Map.of(SillyModelLoader.MODEL_TYPE, new SillyModelLoader(client));
+        return Map.of(SillyModelLoader.MODEL_TYPE, new SillyModelLoader(client),
+                LangIdentModelLoader.MODEL_TYPE, new LangIdentModelLoader());
     }
 
     @Override
