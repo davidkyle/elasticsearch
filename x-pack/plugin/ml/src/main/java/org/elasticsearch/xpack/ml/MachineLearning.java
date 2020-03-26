@@ -215,7 +215,8 @@ import org.elasticsearch.xpack.ml.dataframe.process.results.MemoryUsageEstimatio
 import org.elasticsearch.xpack.ml.inference.ingest.InferenceProcessor;
 import org.elasticsearch.xpack.ml.inference.loadingservice.ModelLoadingService;
 import org.elasticsearch.xpack.ml.inference.persistence.TrainedModelProvider;
-import org.elasticsearch.xpack.ml.inference.search.InferencePhase;
+import org.elasticsearch.xpack.ml.inference.search.InferenceQueryBuilder;
+import org.elasticsearch.xpack.ml.inference.search.InferenceRescorerBuilder;
 import org.elasticsearch.xpack.ml.inference.search.InferenceSearchExtBuilder;
 import org.elasticsearch.xpack.ml.job.JobManager;
 import org.elasticsearch.xpack.ml.job.JobManagerHolder;
@@ -348,6 +349,18 @@ public class MachineLearning extends Plugin implements SystemIndexPlugin, Analys
         }
 
     };
+
+    @Override
+    public List<RescorerSpec<?>> getRescorers() {
+        return Collections.singletonList(
+                new RescorerSpec<>(InferenceRescorerBuilder.NAME, InferenceRescorerBuilder::new, InferenceRescorerBuilder::fromXContent));
+    }
+
+    @Override
+    public List<QuerySpec<?>> getQueries() {
+        return Collections.singletonList(
+                new QuerySpec<>(InferenceQueryBuilder.NAME, InferenceQueryBuilder::new, InferenceQueryBuilder::fromXContent));
+    }
 
     @Override
     public Map<String, Processor.Factory> getProcessors(Processor.Parameters parameters) {

@@ -50,6 +50,10 @@ public class LocalModel implements Model {
         return modelId;
     }
 
+    public Set<String> getFieldNames() {
+        return fieldNames;
+    }
+
     @Override
     public Set<String> getFieldNames() {
         return fieldNames;
