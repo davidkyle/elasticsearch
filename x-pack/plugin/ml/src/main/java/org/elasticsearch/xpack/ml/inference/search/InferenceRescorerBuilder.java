@@ -205,9 +205,10 @@ public class InferenceRescorerBuilder extends RescorerBuilder<InferenceRescorerB
                 TrainedModelProvider modelProvider = new TrainedModelProvider(client, ctx.getXContentRegistry());
                 modelProvider.getTrainedModel(modelId, true, ActionListener.wrap(trainedModel -> {
                     LocalModel model = new LocalModel(
-                        modelId,
-                        trainedModel.ensureParsedDefinition(ctx.getXContentRegistry()).getModelDefinition(),
-                        trainedModel.getInput()
+                            modelId,
+                            trainedModel.ensureParsedDefinition(ctx.getXContentRegistry()).getModelDefinition(),
+                            trainedModel.getInput(),
+                            trainedModel.getDefaultFieldMap()
                     );
                     modelHolder.set(model);
                     actionListener.onResponse(null);
