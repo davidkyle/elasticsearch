@@ -52,7 +52,6 @@ import org.elasticsearch.plugins.SystemIndexPlugin;
 import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.script.ScriptService;
-import org.elasticsearch.search.fetch.FetchSubPhase;
 import org.elasticsearch.threadpool.ExecutorBuilder;
 import org.elasticsearch.threadpool.ScalingExecutorBuilder;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -215,7 +214,6 @@ import org.elasticsearch.xpack.ml.dataframe.process.results.MemoryUsageEstimatio
 import org.elasticsearch.xpack.ml.inference.ingest.InferenceProcessor;
 import org.elasticsearch.xpack.ml.inference.loadingservice.ModelLoadingService;
 import org.elasticsearch.xpack.ml.inference.persistence.TrainedModelProvider;
-import org.elasticsearch.xpack.ml.inference.search.InferenceQueryBuilder;
 import org.elasticsearch.xpack.ml.inference.search.InferenceRescorerBuilder;
 import org.elasticsearch.xpack.ml.inference.search.InferenceSearchExtBuilder;
 import org.elasticsearch.xpack.ml.job.JobManager;
@@ -354,12 +352,6 @@ public class MachineLearning extends Plugin implements SystemIndexPlugin, Analys
     public List<RescorerSpec<?>> getRescorers() {
         return Collections.singletonList(
                 new RescorerSpec<>(InferenceRescorerBuilder.NAME, InferenceRescorerBuilder::new, InferenceRescorerBuilder::fromXContent));
-    }
-
-    @Override
-    public List<QuerySpec<?>> getQueries() {
-        return Collections.singletonList(
-                new QuerySpec<>(InferenceQueryBuilder.NAME, InferenceQueryBuilder::new, InferenceQueryBuilder::fromXContent));
     }
 
     @Override
