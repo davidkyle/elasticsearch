@@ -30,6 +30,9 @@ setup:
 
 ---
 "Test create and delete pipeline with inference processor":
+  - skip:
+      version: "all"
+      reason: "AwaitsFix https://github.com/elastic/elasticsearch/issues/60876"
   - do:
       ingest.put_pipeline:
         id: "regression-model-pipeline"
@@ -52,6 +55,9 @@ setup:
         id: "regression-model-pipeline"
 ---
 "Test create processor with missing mandatory fields":
+  - skip:
+      version: "all"
+      reason: "AwaitsFix https://github.com/elastic/elasticsearch/issues/60876"
   - do:
       catch: /\[model_id\] required property is missing/
       ingest.put_pipeline:
@@ -74,6 +80,9 @@ setup:
       features:
        - "warnings"
        - "allowed_warnings"
+      version: "all"
+      reason: "AwaitsFix https://github.com/elastic/elasticsearch/issues/60876"
+
   - do:
       warnings:
         - 'Deprecated field [field_mappings] used, expected [field_map] instead'
@@ -99,6 +108,9 @@ setup:
         id: "regression-model-pipeline"
 ---
 "Test simulate":
+  - skip:
+      version: "all"
+      reason: "AwaitsFix https://github.com/elastic/elasticsearch/issues/60876"
   - do:
       ingest.simulate:
         body:  >
