@@ -81,6 +81,15 @@ public class DeploymentManager {
         executorServiceForDeployment.execute(() -> doStartDeployment(task));
     }
 
+    public ModelStats getStats(TrainedModelDeploymentTask task) {
+        ProcessContext processContext = processContextByAllocation.get(task.getAllocationId());
+
+        Long modelSizeBytes = processContext.getModelSizeBytes() < 0 ? null : (long) processContext.getModelSizeBytes();
+        return new ModelStats(processContext.resultProcessor.getTimingStats(),
+            processContext.resultProcessor.getLastUsed(),
+            modelSizeBytes);
+    }
+
     private void doStartDeployment(TrainedModelDeploymentTask task) {
         logger.debug("[{}] Starting model deployment", task.getModelId());
 
@@ -272,6 +281,16 @@ public class DeploymentManager {
             this.index = Objects.requireNonNull(index);
             resultProcessor = new PyTorchResultProcessor(modelId);
             this.stateStreamer = new PyTorchStateStreamer(client, executorService, xContentRegistry);
+        }
+
+        /**
+         * A value of -1 means the size is unknown. Most likely
+         * because the mode has not been loaded yet or the load
+         * failed.
+         * @return size in bytes or -1
+         */
+        int getModelSizeBytes() {
+            return stateStreamer.getModelSize();
         }
 
         synchronized void startProcess() {

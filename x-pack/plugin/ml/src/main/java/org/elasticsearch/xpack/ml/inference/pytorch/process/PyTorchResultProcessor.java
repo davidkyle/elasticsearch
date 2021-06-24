@@ -13,7 +13,9 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.xpack.ml.inference.deployment.PyTorchResult;
 
+import java.time.Instant;
 import java.util.Iterator;
+import java.util.LongSummaryStatistics;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,9 +30,12 @@ public class PyTorchResultProcessor {
 
     private final String deploymentId;
     private volatile boolean isStopping;
+    private final LongSummaryStatistics summaryStatistics;
+    private Instant lastUsed;
 
     public PyTorchResultProcessor(String deploymentId) {
         this.deploymentId = Objects.requireNonNull(deploymentId);
+        this.summaryStatistics = new LongSummaryStatistics();
     }
 
     public void process(NativePyTorchProcess process) {
@@ -39,6 +44,7 @@ public class PyTorchResultProcessor {
             while (iterator.hasNext()) {
                 PyTorchResult result = iterator.next();
                 logger.trace(() -> new ParameterizedMessage("[{}] Parsed result with id [{}]", deploymentId, result.getRequestId()));
+                processResult(result);
                 PendingResult pendingResult = pendingResults.get(result.getRequestId());
                 if (pendingResult == null) {
                     logger.warn(() -> new ParameterizedMessage("[{}] no pending result for [{}]", deploymentId, result.getRequestId()));
@@ -54,6 +60,24 @@ public class PyTorchResultProcessor {
             }
         }
         logger.debug(() -> new ParameterizedMessage("[{}] Results processing finished", deploymentId));
+    }
+
+    public synchronized LongSummaryStatistics getTimingStats() {
+        return new LongSummaryStatistics(summaryStatistics.getCount(),
+            summaryStatistics.getMin(),
+            summaryStatistics.getMax(),
+            summaryStatistics.getSum());
+    }
+
+    public synchronized Instant getLastUsed() {
+        return lastUsed;
+    }
+
+    private synchronized void processResult(PyTorchResult result) {
+        if (result.isError() == false) {
+            summaryStatistics.accept(result.getTimeMs());
+            lastUsed = Instant.now();
+        }
     }
 
     public PyTorchResult waitForResult(String requestId, TimeValue timeout) throws InterruptedException {

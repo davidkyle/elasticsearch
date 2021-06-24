@@ -188,7 +188,7 @@ public class StartTrainedModelDeploymentAction extends ActionType<NodeAcknowledg
                 if (Strings.isAllOrWildcard(expectedId)) {
                     return true;
                 }
-                String expectedDescription = MlTasks.TRAINED_MODEL_DEPLOYMENT_TASK_ID_PREFIX + expectedId;
+                String expectedDescription = MlTasks.trainedModelDeploymentTaskId(expectedId);
                 return expectedDescription.equals(task.getDescription());
             }
             return false;
