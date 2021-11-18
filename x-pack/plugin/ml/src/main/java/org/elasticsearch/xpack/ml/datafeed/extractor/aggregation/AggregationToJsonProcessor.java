@@ -202,7 +202,7 @@ class AggregationToJsonProcessor {
             queueDocToWrite(keyValuePairs, docCount);
         }
 
-        addedLeafKeys.forEach(k -> keyValuePairs.remove(k));
+        addedLeafKeys.forEach(keyValuePairs::remove);
     }
 
     private void processDateHistogram(Histogram agg) throws IOException {

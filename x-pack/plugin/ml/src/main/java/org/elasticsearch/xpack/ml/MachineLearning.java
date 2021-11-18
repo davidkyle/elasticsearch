@@ -91,6 +91,7 @@ import org.elasticsearch.xpack.core.ml.MlStatsIndex;
 import org.elasticsearch.xpack.core.ml.MlTasks;
 import org.elasticsearch.xpack.core.ml.action.CloseJobAction;
 import org.elasticsearch.xpack.core.ml.action.CreateTrainedModelAllocationAction;
+import org.elasticsearch.xpack.core.ml.action.DatafeedAutoAggAction;
 import org.elasticsearch.xpack.core.ml.action.DeleteCalendarAction;
 import org.elasticsearch.xpack.core.ml.action.DeleteCalendarEventAction;
 import org.elasticsearch.xpack.core.ml.action.DeleteDataFrameAnalyticsAction;
@@ -183,6 +184,7 @@ import org.elasticsearch.xpack.core.ml.utils.ExceptionsHelper;
 import org.elasticsearch.xpack.core.template.TemplateUtils;
 import org.elasticsearch.xpack.ml.action.TransportCloseJobAction;
 import org.elasticsearch.xpack.ml.action.TransportCreateTrainedModelAllocationAction;
+import org.elasticsearch.xpack.ml.action.TransportDatafeedAutoAggAction;
 import org.elasticsearch.xpack.ml.action.TransportDeleteCalendarAction;
 import org.elasticsearch.xpack.ml.action.TransportDeleteCalendarEventAction;
 import org.elasticsearch.xpack.ml.action.TransportDeleteDataFrameAnalyticsAction;
@@ -350,6 +352,7 @@ import org.elasticsearch.xpack.ml.rest.cat.RestCatDataFrameAnalyticsAction;
 import org.elasticsearch.xpack.ml.rest.cat.RestCatDatafeedsAction;
 import org.elasticsearch.xpack.ml.rest.cat.RestCatJobsAction;
 import org.elasticsearch.xpack.ml.rest.cat.RestCatTrainedModelsAction;
+import org.elasticsearch.xpack.ml.rest.datafeeds.RestDatafeedAutoAggAction;
 import org.elasticsearch.xpack.ml.rest.datafeeds.RestDeleteDatafeedAction;
 import org.elasticsearch.xpack.ml.rest.datafeeds.RestGetDatafeedStatsAction;
 import org.elasticsearch.xpack.ml.rest.datafeeds.RestGetDatafeedsAction;
@@ -1161,6 +1164,7 @@ public class MachineLearning extends Plugin
             new RestPreviewDatafeedAction(),
             new RestStartDatafeedAction(),
             new RestStopDatafeedAction(),
+            new RestDatafeedAutoAggAction(),
             new RestDeleteModelSnapshotAction(),
             new RestDeleteExpiredDataAction(),
             new RestForecastJobAction(),
@@ -1248,6 +1252,7 @@ public class MachineLearning extends Plugin
             new ActionHandler<>(PreviewDatafeedAction.INSTANCE, TransportPreviewDatafeedAction.class),
             new ActionHandler<>(StartDatafeedAction.INSTANCE, TransportStartDatafeedAction.class),
             new ActionHandler<>(StopDatafeedAction.INSTANCE, TransportStopDatafeedAction.class),
+            new ActionHandler<>(DatafeedAutoAggAction.INSTANCE, TransportDatafeedAutoAggAction.class),
             new ActionHandler<>(IsolateDatafeedAction.INSTANCE, TransportIsolateDatafeedAction.class),
             new ActionHandler<>(DeleteModelSnapshotAction.INSTANCE, TransportDeleteModelSnapshotAction.class),
             new ActionHandler<>(UpdateProcessAction.INSTANCE, TransportUpdateProcessAction.class),

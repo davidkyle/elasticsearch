@@ -753,50 +753,6 @@ public class Job extends AbstractDiffable<Job> implements Writeable, ToXContentO
         return Strings.toString(this);
     }
 
-    public AggregationBuilder generateDatafeedAgg() {
-        if (analysisConfig.getDetectors().size() > 1 || analysisConfig.getCategorizationFieldName() != null) {
-            return null;
-        }
-
-        Detector detector = analysisConfig.getDetectors().get(0);
-
-        if (detector.getFunction().isAggregatable() == false) {
-            return null;
-        }
-
-        Set<String> terms = Stream.concat(analysisConfig.getInfluencers().stream(), detector.getByOverPartitionTerms().stream())
-            .collect(Collectors.toUnmodifiableSet());
-
-        TimeValue histogramInterval = detector.getFunction().isCrossBucketSampling()
-            ? TimeValue.timeValueMillis(analysisConfig.getBucketSpan().millis() / 10)
-            : analysisConfig.getBucketSpan();
-
-        AggregationBuilder aggs;
-
-        if (terms.isEmpty()) {
-            aggs = AggregationBuilders.dateHistogram("buckets")
-                .field(dataDescription.getTimeField())
-                .fixedInterval(new DateHistogramInterval(histogramInterval.getStringRep()));
-        } else {
-            List<CompositeValuesSourceBuilder<?>> sources = new ArrayList<>();
-            sources.add(
-                new DateHistogramValuesSourceBuilder(dataDescription.getTimeField()).field(dataDescription.getTimeField())
-                    .fixedInterval(new DateHistogramInterval(histogramInterval.getStringRep()))
-            );
-            terms.forEach(term -> sources.add(new TermsValuesSourceBuilder(term).field(term)));
-
-            aggs = AggregationBuilders.composite("buckets", sources).size(10000);
-        }
-
-        aggs.subAggregation(AggregationBuilders.max(dataDescription.getTimeField()).field(dataDescription.getTimeField()));
-
-        if (detector.getFunction().isCount() == false) {
-            aggs.subAggregation(detector.getFunction().buildAgg(detector.getFieldName()));
-        }
-
-        return aggs;
-    }
-
     private static void checkValueNotLessThan(long minVal, String name, Long value) {
         if (value != null && value < minVal) {
             throw new IllegalArgumentException(Messages.getMessage(Messages.JOB_CONFIG_FIELD_VALUE_TOO_LOW, name, minVal, value));
@@ -951,6 +907,10 @@ public class Job extends AbstractDiffable<Job> implements Writeable, ToXContentO
 
         public AnalysisConfig getAnalysisConfig() {
             return analysisConfig;
+        }
+
+        public String getTimeField() {
+            return dataDescription.getTimeField();
         }
 
         public Builder setAnalysisLimits(AnalysisLimits analysisLimits) {

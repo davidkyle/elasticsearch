@@ -36,8 +36,15 @@ public class AnalysisConfigTests extends AbstractSerializingTestCase<AnalysisCon
         return createRandomized().build();
     }
 
+    public static AnalysisConfig.Builder createRandomizedCategorizationConfig() {
+        return createRandomized(true);
+    }
+
     public static AnalysisConfig.Builder createRandomized() {
-        boolean isCategorization = randomBoolean();
+        return createRandomized(randomBoolean());
+    }
+
+    private static AnalysisConfig.Builder createRandomized(boolean isCategorization) {
         List<Detector> detectors = new ArrayList<>();
         int numDetectors = randomIntBetween(1, 10);
         for (int i = 0; i < numDetectors; i++) {

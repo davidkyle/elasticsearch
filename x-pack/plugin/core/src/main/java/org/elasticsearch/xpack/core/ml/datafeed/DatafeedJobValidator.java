@@ -27,7 +27,22 @@ public final class DatafeedJobValidator {
      * @param xContentRegistry the named xcontent registry for parsing datafeed aggs
      */
     public static void validate(DatafeedConfig datafeedConfig, Job job, NamedXContentRegistry xContentRegistry) {
-        AnalysisConfig analysisConfig = job.getAnalysisConfig();
+        validate(datafeedConfig, job.getAnalysisConfig(), job.getDataDescription().getTimeField(), xContentRegistry);
+    }
+
+    /**
+     * Validates a datafeedConfig, see {@link #validate(DatafeedConfig, Job, NamedXContentRegistry)}
+     * @param datafeedConfig    The datafeed config
+     * @param analysisConfig    The job's AnalysisConfig
+     * @param timeField         The job's time field name
+     * @param xContentRegistry  The named xcontent registry for parsing datafeed aggs
+     */
+    public static void validate(
+        DatafeedConfig datafeedConfig,
+        AnalysisConfig analysisConfig,
+        String timeField,
+        NamedXContentRegistry xContentRegistry
+    ) {
         if (analysisConfig.getLatency() != null && analysisConfig.getLatency().seconds() > 0) {
             throw ExceptionsHelper.badRequestException(Messages.getMessage(Messages.DATAFEED_DOES_NOT_SUPPORT_JOB_WITH_LATENCY));
         }
@@ -44,7 +59,7 @@ public final class DatafeedJobValidator {
             checkValidDelayedDataCheckConfig(bucketSpan, delayedDataCheckConfig);
         }
 
-        checkTimeFieldIsNotASearchRuntimeField(datafeedConfig, job.getDataDescription().getTimeField());
+        checkTimeFieldIsNotASearchRuntimeField(datafeedConfig, timeField);
     }
 
     private static void checkValidDelayedDataCheckConfig(TimeValue bucketSpan, DelayedDataCheckConfig delayedDataCheckConfig) {

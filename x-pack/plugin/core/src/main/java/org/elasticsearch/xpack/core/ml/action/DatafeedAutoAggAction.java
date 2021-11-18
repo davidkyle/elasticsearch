@@ -14,7 +14,7 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.core.Nullable;
+import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.xcontent.ObjectParser;
 import org.elasticsearch.xcontent.ParseField;
 import org.elasticsearch.xcontent.ToXContentObject;
@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Response> {
+public class DatafeedAutoAggAction extends ActionType<DatafeedAutoAggAction.Response> {
 
-    public static final PreviewDatafeedAction INSTANCE = new PreviewDatafeedAction();
-    public static final String NAME = "cluster:admin/xpack/ml/datafeeds/preview";
+    public static final DatafeedAutoAggAction INSTANCE = new DatafeedAutoAggAction();
+    public static final String NAME = "cluster:admin/xpack/ml/datafeeds/auto_agg";
 
-    private PreviewDatafeedAction() {
+    private DatafeedAutoAggAction() {
         super(NAME, Response::new);
     }
 
@@ -45,46 +45,34 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
         public static final ParseField DATAFEED_CONFIG = new ParseField("datafeed_config");
         public static final ParseField JOB_CONFIG = new ParseField("job_config");
 
-        private static final ObjectParser<Builder, Void> PARSER = new ObjectParser<>("preview_datafeed_action", Request.Builder::new);
+        private static final ObjectParser<Request.Builder, Void> PARSER = new ObjectParser<>(
+            "datafeed_auto_agg_action",
+            Request.Builder::new
+        );
         static {
-            PARSER.declareObject(Builder::setDatafeedBuilder, DatafeedConfig.STRICT_PARSER, DATAFEED_CONFIG);
-            PARSER.declareObject(Builder::setJobBuilder, Job.STRICT_PARSER, JOB_CONFIG);
-        }
-
-        public static Request fromXContent(XContentParser parser, @Nullable String datafeedId) {
-            Builder builder = PARSER.apply(parser, null);
-            // We don't need to check for "inconsistent ids" as we don't parse an ID from the body
-            if (datafeedId != null) {
-                builder.setDatafeedId(datafeedId);
+                PARSER.declareObject(Request.Builder::setDatafeedBuilder, DatafeedConfig.STRICT_PARSER, DATAFEED_CONFIG);
+                PARSER.declareObject(Request.Builder::setJobBuilder, Job.STRICT_PARSER, JOB_CONFIG);
             }
+
+        public static Request fromXContent(XContentParser parser) {
+            Request.Builder builder = PARSER.apply(parser, null);
             return builder.build();
         }
 
-        private final String datafeedId;
         private final DatafeedConfig datafeedConfig;
         private final Job.Builder jobConfig;
 
+
+
         public Request(StreamInput in) throws IOException {
             super(in);
-            datafeedId = in.readString();
             datafeedConfig = in.readOptionalWriteable(DatafeedConfig::new);
             jobConfig = in.readOptionalWriteable(Job.Builder::new);
         }
 
-        public Request(String datafeedId) {
-            this.datafeedId = ExceptionsHelper.requireNonNull(datafeedId, DatafeedConfig.ID);
-            this.datafeedConfig = null;
-            this.jobConfig = null;
-        }
-
         public Request(DatafeedConfig datafeedConfig, Job.Builder jobConfig) {
-            this.datafeedId = BLANK_ID;
             this.datafeedConfig = ExceptionsHelper.requireNonNull(datafeedConfig, DATAFEED_CONFIG.getPreferredName());
-            this.jobConfig = jobConfig;
-        }
-
-        public String getDatafeedId() {
-            return datafeedId;
+            this.jobConfig = ExceptionsHelper.requireNonNull(jobConfig, JOB_CONFIG.getPreferredName());
         }
 
         public DatafeedConfig getDatafeedConfig() {
@@ -103,7 +91,6 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
         @Override
         public void writeTo(StreamOutput out) throws IOException {
             super.writeTo(out);
-            out.writeString(datafeedId);
             out.writeOptionalWriteable(datafeedConfig);
             out.writeOptionalWriteable(jobConfig);
         }
@@ -111,9 +98,6 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
         @Override
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
             builder.startObject();
-            if (datafeedId.equals("") == false) {
-                builder.field(DatafeedConfig.ID.getPreferredName(), datafeedId);
-            }
             if (datafeedConfig != null) {
                 builder.field(DATAFEED_CONFIG.getPreferredName(), datafeedConfig);
             }
@@ -126,39 +110,32 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
 
         @Override
         public int hashCode() {
-            return Objects.hash(datafeedId, datafeedConfig, jobConfig);
+            return Objects.hash(datafeedConfig, jobConfig);
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
+            public boolean equals(Object obj) {
+                if (obj == null) {
+                    return false;
+                }
+                if (getClass() != obj.getClass()) {
+                    return false;
+                }
+                Request other = (Request) obj;
+                    return Objects.equals(datafeedConfig, other.datafeedConfig)
+                    && Objects.equals(jobConfig, other.jobConfig);
             }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            Request other = (Request) obj;
-            return Objects.equals(datafeedId, other.datafeedId)
-                && Objects.equals(datafeedConfig, other.datafeedConfig)
-                && Objects.equals(jobConfig, other.jobConfig);
-        }
 
         public static class Builder {
-            private String datafeedId;
             private DatafeedConfig.Builder datafeedBuilder;
             private Job.Builder jobBuilder;
 
-            public Builder setDatafeedId(String datafeedId) {
-                this.datafeedId = datafeedId;
-                return this;
-            }
-
-            public Builder setDatafeedBuilder(DatafeedConfig.Builder datafeedBuilder) {
+            public Request.Builder setDatafeedBuilder(DatafeedConfig.Builder datafeedBuilder) {
                 this.datafeedBuilder = datafeedBuilder;
                 return this;
             }
 
-            public Builder setJobBuilder(Job.Builder jobBuilder) {
+            public Request.Builder setJobBuilder(Job.Builder jobBuilder) {
                 this.jobBuilder = jobBuilder;
                 return this;
             }
@@ -190,14 +167,8 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
                         datafeedBuilder = jobBuilder.getDatafeedConfig().setJobId(jobBuilder.getId()).setId(jobBuilder.getId());
                     }
                 }
-                if (datafeedId != null && (datafeedBuilder != null || jobBuilder != null)) {
-                    throw new IllegalArgumentException(
-                        "[datafeed_id] cannot be supplied when either [job_config] or [datafeed_config] is present"
-                    );
-                }
-                return datafeedId != null
-                    ? new Request(datafeedId)
-                    : new Request(datafeedBuilder == null ? null : datafeedBuilder.build(), jobBuilder);
+
+                return new Request(datafeedBuilder.build(), jobBuilder);
             }
         }
     }
@@ -205,36 +176,41 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
     public static class Response extends ActionResponse implements ToXContentObject {
 
         private final BytesReference preview;
+        private final AggregatorFactories.Builder aggs;
 
         public Response(StreamInput in) throws IOException {
             super(in);
             preview = in.readBytesReference();
+            aggs = in.readOptionalWriteable(AggregatorFactories.Builder::new);
         }
 
-        public Response(BytesReference preview) {
+        public Response(BytesReference preview, AggregatorFactories.Builder aggs) {
             this.preview = preview;
-        }
-
-        public BytesReference getPreview() {
-            return preview;
+            this.aggs = aggs;
         }
 
         @Override
         public void writeTo(StreamOutput out) throws IOException {
             out.writeBytesReference(preview);
+            out.writeOptionalWriteable(aggs);
         }
 
         @Override
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
+            builder.startObject();
+            builder.field("aggs", aggs);
+            builder.startArray("preview");
             try (InputStream stream = preview.streamInput()) {
                 builder.rawValue(stream, XContentType.JSON);
             }
+            builder.endArray();
+            builder.endObject();
             return builder;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(preview);
+            return Objects.hash(preview, aggs);
         }
 
         @Override
@@ -246,7 +222,8 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
                 return false;
             }
             Response other = (Response) obj;
-            return Objects.equals(preview, other.preview);
+            return Objects.equals(preview, other.preview) &&
+                Objects.equals(aggs, other.aggs);
         }
 
         @Override
@@ -254,5 +231,4 @@ public class PreviewDatafeedAction extends ActionType<PreviewDatafeedAction.Resp
             return Strings.toString(this);
         }
     }
-
 }
