@@ -156,12 +156,7 @@ public class ElserMlNodeService implements InferenceService {
     }
 
     @Override
-    public void infer(
-        Model model,
-        List<String> input,
-        Map<String, Object> taskSettings,
-        ActionListener<List<? extends InferenceResults>> listener
-    ) {
+    public void infer(Model model, List<String> input, Map<String, Object> taskSettings, ActionListener<List<? extends InferenceResults>> listener) {
         // No task settings to override with requestTaskSettings
 
         if (model.getConfigurations().getTaskType() != TaskType.SPARSE_EMBEDDING) {
