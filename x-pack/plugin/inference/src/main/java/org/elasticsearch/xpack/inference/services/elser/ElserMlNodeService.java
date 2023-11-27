@@ -164,7 +164,7 @@ public class ElserMlNodeService implements InferenceService {
     ) {
         // No task settings to override with requestTaskSettings
 
-        if (model.getConfigurations().getTaskType() != TaskType.SPARSE_EMBEDDING) {
+        if (TaskType.SPARSE_EMBEDDING.isAnyOrSame(model.getConfigurations().getTaskType()) == false) {
             listener.onFailure(
                 new ElasticsearchStatusException(
                     TaskType.unsupportedTaskTypeErrorMsg(model.getConfigurations().getTaskType(), NAME),

@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-package org.elasticsearch.xpack.inference.action;
+package org.elasticsearch.xpack.core.inference.action;
 
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.ActionType;
@@ -34,6 +34,11 @@ public class GetInferenceModelAction extends ActionType<PutInferenceModelAction.
         public Request(String modelId, String taskType) {
             this.modelId = modelId;
             this.taskType = TaskType.fromStringOrStatusException(taskType);
+        }
+
+        public Request(String modelId, TaskType taskType) {
+            this.modelId = modelId;
+            this.taskType = taskType;
         }
 
         public Request(StreamInput in) throws IOException {

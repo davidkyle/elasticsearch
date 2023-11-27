@@ -157,11 +157,8 @@ public class TestInferenceServicePlugin extends Plugin implements InferenceServi
             ActionListener<List<? extends InferenceResults>> listener
         ) {
             switch (model.getConfigurations().getTaskType()) {
-                case SPARSE_EMBEDDING -> {
-                    var results = new ArrayList<TestResults>();
-                    input.forEach(i -> { results.add(new TestResults("bar")); });
-                    listener.onResponse(results);
-                }
+                case ANY -> listener.onResponse(makeResults(input));
+                case SPARSE_EMBEDDING -> listener.onResponse(makeResults(input));
                 default -> listener.onFailure(
                     new ElasticsearchStatusException(
                         TaskType.unsupportedTaskTypeErrorMsg(model.getConfigurations().getTaskType(), name()),
@@ -169,7 +166,12 @@ public class TestInferenceServicePlugin extends Plugin implements InferenceServi
                     )
                 );
             }
+        }
 
+        private ArrayList<TestResults> makeResults(List<String> input) {
+            var results = new ArrayList<TestResults>();
+            input.forEach(i -> { results.add(new TestResults("bar")); });
+            return results;
         }
 
         @Override
