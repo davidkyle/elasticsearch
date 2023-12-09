@@ -7,6 +7,8 @@
 
 package org.elasticsearch.xpack.ml.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.client.internal.Client;
@@ -21,6 +23,9 @@ import static org.elasticsearch.xpack.core.ml.MlTasks.downloadModelTaskDescripti
  * Utility class for retrieving download tasks created by a PUT trained model API request.
  */
 public class TaskRetriever {
+
+    private static final Logger logger = LogManager.getLogger(TaskRetriever.class);
+
     /**
      * Returns a {@link TaskInfo} if one exists representing an in-progress trained model download.
      *
@@ -39,6 +44,7 @@ public class TaskRetriever {
         ActionListener<TaskInfo> listener,
         TimeValue timeout
     ) {
+        logger.info("Get download task status");
         client.admin()
             .cluster()
             .prepareListTasks()
@@ -48,6 +54,7 @@ public class TaskRetriever {
             .setDescriptions(downloadModelTaskDescription(modelId))
             .setTimeout(timeout)
             .execute(ActionListener.wrap((response) -> {
+                logger.info("Get download task response:" + response);
                 var tasks = response.getTasks();
 
                 if (tasks.size() > 0) {
@@ -56,16 +63,18 @@ public class TaskRetriever {
                 } else {
                     listener.onResponse(null);
                 }
-            },
-                e -> listener.onFailure(
+            }, e -> {
+                logger.info("Get download task error:", e);
+                listener.onFailure(
                     new ElasticsearchStatusException(
                         "Unable to retrieve task information for model id [{}]",
                         RestStatus.INTERNAL_SERVER_ERROR,
                         e,
                         modelId
                     )
-                )
-            ));
+                );
+            }));
+
     }
 
     private TaskRetriever() {}
