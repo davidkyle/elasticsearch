@@ -142,7 +142,7 @@ public final class UnigramTokenizer extends Tokenizer {
     @Override
     public void end() throws IOException {
         super.end();
-        offsetAtt.setOffset(correctOffset(whitespaceTokenizer.finalOffset), correctOffset(whitespaceTokenizer.finalOffset));
+//        offsetAtt.setOffset(correctOffset(whitespaceTokenizer.finalOffset), correctOffset(whitespaceTokenizer.finalOffset));
     }
 
     private void popFromTokens() {
@@ -150,7 +150,7 @@ public final class UnigramTokenizer extends Tokenizer {
             DelimitedToken.Encoded token = tokens.removeFirst();
             tokenizedValues.add(token);
             termAtt.setEmpty().append(token.charSequence());
-            offsetAtt.setOffset(token.startOffset(), token.endOffset());
+//            offsetAtt.setOffset(token.startOffset(), token.endOffset());
         }
     }
 
@@ -217,7 +217,8 @@ public final class UnigramTokenizer extends Tokenizer {
                         // doesn't know about our prefix, so we should find out the correct offsets when not taking it into account.
                         adj -= PREFIX.length();
                     }
-                    return correctOffset(adj);
+                    var correct =  correctOffset(adj);
+                    return correct;
                 };
                 List<DelimitedToken.Encoded> tokenList = tokenize(
                     MultiCharSequence.from(PREFIX, token.charSequence()),

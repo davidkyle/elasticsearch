@@ -172,7 +172,6 @@ public class PrecompiledCharMapNormalizer extends BaseCharFilter {
         ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(str));
         byte[] strBytes = new byte[byteBuffer.limit()];
         byteBuffer.get(strBytes);
-        int[] strCp = str.codePoints().toArray();
         BreakIterator b = BreakIterator.getCharacterInstance(Locale.ROOT);
         b.setText(str);
         // We iterate the whole string, so b.first() is always `0`

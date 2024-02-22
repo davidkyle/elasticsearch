@@ -41,7 +41,7 @@ public class Vocabulary implements Writeable, ToXContentObject {
             a -> new Vocabulary((List<String>) a[0], (String) a[1], (List<String>) a[2], (List<Double>) a[3])
         );
         parser.declareStringArray(ConstructingObjectParser.constructorArg(), VOCABULARY);
-        parser.declareString(ConstructingObjectParser.constructorArg(), TrainedModelConfig.MODEL_ID);
+        parser.declareString(ConstructingObjectParser.optionalConstructorArg(), TrainedModelConfig.MODEL_ID);
         parser.declareStringArray(ConstructingObjectParser.optionalConstructorArg(), MERGES);
         parser.declareDoubleArray(ConstructingObjectParser.optionalConstructorArg(), SCORES);
         return parser;
@@ -56,7 +56,7 @@ public class Vocabulary implements Writeable, ToXContentObject {
 
     public Vocabulary(List<String> vocab, String modelId, @Nullable List<String> merges, @Nullable List<Double> scores) {
         this.vocab = ExceptionsHelper.requireNonNull(vocab, VOCABULARY);
-        this.modelId = ExceptionsHelper.requireNonNull(modelId, TrainedModelConfig.MODEL_ID);
+        this.modelId = modelId; // ExceptionsHelper.requireNonNull(modelId, TrainedModelConfig.MODEL_ID);
         this.merges = Optional.ofNullable(merges).orElse(List.of());
         this.scores = Optional.ofNullable(scores).orElse(List.of());
     }

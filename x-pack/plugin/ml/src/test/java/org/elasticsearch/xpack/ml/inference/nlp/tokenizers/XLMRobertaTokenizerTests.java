@@ -8,11 +8,15 @@
 package org.elasticsearch.xpack.ml.inference.nlp.tokenizers;
 
 import org.elasticsearch.test.ESTestCase;
+import org.elasticsearch.xcontent.XContentParserConfiguration;
+import org.elasticsearch.xcontent.XContentType;
 import org.elasticsearch.xpack.core.ml.inference.trainedmodel.Tokenization;
 import org.elasticsearch.xpack.core.ml.inference.trainedmodel.XLMRobertaTokenization;
+import org.elasticsearch.xpack.ml.inference.nlp.Vocabulary;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,6 +126,31 @@ public class XLMRobertaTokenizerTests extends ESTestCase {
             assertThat(tokenStrings(tokenization.tokens().get(0)), contains("▁🏁"));
             assertThat(tokenization.tokenIds()[0], equalTo(3)); // the unknown token (not in the vocabulary)
         }
+    }
+
+    public void testPop() throws IOException {
+        var vocab = loadVocab();
+
+        var text = "⅓ od ukupnog broja sagrađenih kuća ima jednu ili dvije kamene prostorije";
+
+        try (
+            XLMRobertaTokenizer tokenizer = XLMRobertaTokenizer.builder(
+                vocab.get(),
+                vocab.scores(),
+                new XLMRobertaTokenization(false, null, Tokenization.Truncate.NONE, -1)
+            ).build()
+        ) {
+            TokenizationResult.Tokens tokenization = tokenizer.tokenize(text, Tokenization.Truncate.NONE, -1, 0, null).get(0);
+        }
+
+
+    }
+
+    private Vocabulary loadVocab() throws IOException {
+        var inputStream = XLMRobertaTokenizer.class.getResourceAsStream("/org/elasticsearch/xpack/ml/inference.nlp.tokenizers/vocab.json");
+
+        var parser = XContentType.JSON.xContent().createParser(XContentParserConfiguration.EMPTY, inputStream);
+        return Vocabulary.PARSER.apply(parser, null);
     }
 
     public void testTokenizeWithNeverSplit() throws IOException {
