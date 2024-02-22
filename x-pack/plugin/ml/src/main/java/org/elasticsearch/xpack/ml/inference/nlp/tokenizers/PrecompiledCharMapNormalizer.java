@@ -192,8 +192,10 @@ public class PrecompiledCharMapNormalizer extends BaseCharFilter {
                     BytesRef subStr = maybeSubStr.get();
                     int numChars = UnicodeUtil.UTF8toUTF16(subStr.bytes, subStr.offset, subStr.length, reusableCharDecodeBuffer);
                     normalizedCharPos += numChars;
-                    if (numChars != end - startIter) {
-                        addOffCorrectMap(normalizedCharPos, getLastCumulativeDiff() + end - startIter - numChars);
+                    for (int i = end - startIter + 1; i < numChars; i++) {
+                        // more characters in the normalised form,
+//                        addOffCorrectMap(normalizedCharPos, getLastCumulativeDiff() + end - startIter - numChars);
+                        addOffCorrectMap(i, getLastCumulativeDiff() + 1);
                     }
                     strBuilder.append(reusableCharDecodeBuffer, 0, numChars);
                     bytePos += byteLen;

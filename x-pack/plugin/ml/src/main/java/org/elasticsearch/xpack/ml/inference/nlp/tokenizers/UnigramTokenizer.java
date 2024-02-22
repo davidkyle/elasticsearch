@@ -142,7 +142,7 @@ public final class UnigramTokenizer extends Tokenizer {
     @Override
     public void end() throws IOException {
         super.end();
-//        offsetAtt.setOffset(correctOffset(whitespaceTokenizer.finalOffset), correctOffset(whitespaceTokenizer.finalOffset));
+        offsetAtt.setOffset(correctOffset(whitespaceTokenizer.finalOffset), correctOffset(whitespaceTokenizer.finalOffset));
     }
 
     private void popFromTokens() {
@@ -150,7 +150,7 @@ public final class UnigramTokenizer extends Tokenizer {
             DelimitedToken.Encoded token = tokens.removeFirst();
             tokenizedValues.add(token);
             termAtt.setEmpty().append(token.charSequence());
-//            offsetAtt.setOffset(token.startOffset(), token.endOffset());
+            offsetAtt.setOffset(token.startOffset(), token.endOffset());
         }
     }
 
