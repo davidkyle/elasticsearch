@@ -7,6 +7,8 @@
 
 package org.elasticsearch.xpack.inference.common;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.common.util.concurrent.AtomicArray;
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
  * in the input list.
  */
 public class EmbeddingRequestChunker {
+
+    private static final Logger logger = LogManager.getLogger(EmbeddingRequestChunker.class);
 
     public enum EmbeddingType {
         FLOAT,
@@ -103,6 +107,8 @@ public class EmbeddingRequestChunker {
             }
             chunkedInputs.add(chunks);
         }
+
+        logger.info("Batched " + inputs.size() + " inputs in " + batchedRequests.size() + " requests");
     }
 
     private int addToBatches(List<String> chunks, int inputIndex) {
