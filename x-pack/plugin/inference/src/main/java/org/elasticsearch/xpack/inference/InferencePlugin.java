@@ -62,13 +62,9 @@ import org.elasticsearch.xpack.inference.action.TransportUpdateInferenceModelAct
 import org.elasticsearch.xpack.inference.action.filter.ShardBulkInferenceActionFilter;
 import org.elasticsearch.xpack.inference.common.Truncator;
 import org.elasticsearch.xpack.inference.external.amazonbedrock.AmazonBedrockRequestSender;
-import org.elasticsearch.xpack.inference.external.http.ElasticInferenceServiceHttpClientManager;
-import org.elasticsearch.xpack.inference.external.http.ElasticInferenceServiceHttpClientManager;
 import org.elasticsearch.xpack.inference.external.http.HttpClientManager;
 import org.elasticsearch.xpack.inference.external.http.HttpSettings;
 import org.elasticsearch.xpack.inference.external.http.retry.RetrySettings;
-import org.elasticsearch.xpack.inference.external.http.sender.ElasticInferenceServiceRequestSender;
-import org.elasticsearch.xpack.inference.external.http.sender.ElasticInferenceServiceRequestSender;
 import org.elasticsearch.xpack.inference.external.http.sender.HttpRequestSender;
 import org.elasticsearch.xpack.inference.external.http.sender.RequestExecutorServiceSettings;
 import org.elasticsearch.xpack.inference.logging.ThrottlerManager;
@@ -121,6 +117,7 @@ import static java.util.Collections.singletonList;
 import static org.elasticsearch.xpack.inference.services.elastic.ElasticInferenceService.ELASTIC_INFERENCE_SERVICE_IDENTIFIER;
 import static org.elasticsearch.xpack.inference.services.elastic.ElasticInferenceServiceFeature.DEPRECATED_ELASTIC_INFERENCE_SERVICE_FEATURE_FLAG;
 import static org.elasticsearch.xpack.inference.services.elastic.ElasticInferenceServiceFeature.ELASTIC_INFERENCE_SERVICE_FEATURE_FLAG;
+import static org.elasticsearch.xpack.inference.services.elastic.ElasticInferenceServiceSettings.ELASTIC_INFERENCE_SERVICE_SSL_CONFIGURATION_PREFIX;
 
 public class InferencePlugin extends Plugin implements ActionPlugin, ExtensiblePlugin, SystemIndexPlugin, MapperPlugin, SearchPlugin {
 
@@ -148,7 +145,7 @@ public class InferencePlugin extends Plugin implements ActionPlugin, ExtensibleP
     private final Settings settings;
     private final SetOnce<HttpRequestSender.Factory> httpFactory = new SetOnce<>();
     private final SetOnce<AmazonBedrockRequestSender.Factory> amazonBedrockFactory = new SetOnce<>();
-    private final SetOnce<ElasticInferenceServiceRequestSender.Factory> elasicInferenceServiceFactory = new SetOnce<>();
+    private final SetOnce<HttpRequestSender.Factory> elasicInferenceServiceFactory = new SetOnce<>();
     private final SetOnce<ServiceComponents> serviceComponents = new SetOnce<>();
     private final SetOnce<ElasticInferenceServiceComponents> elasticInferenceServiceComponents = new SetOnce<>();
     private final SetOnce<InferenceServiceRegistry> inferenceServiceRegistry = new SetOnce<>();
@@ -237,11 +234,14 @@ public class InferencePlugin extends Plugin implements ActionPlugin, ExtensibleP
         }
 
         if (elasticInferenceUrl != null) {
-            var elasticInferenceServiceHttpClientManager = ElasticInferenceServiceHttpClientManager.create(
-                settings, services.threadPool(), services.clusterService(), throttlerManager);
+            var sslStrategy = HttpClientManager.getSSLStrategy(ELASTIC_INFERENCE_SERVICE_SSL_CONFIGURATION_PREFIX);
+            var elasticInferenceServiceHttpClientManager = HttpClientManager.create(
+                settings, services.threadPool(), services.clusterService(), throttlerManager, sslStrategy
+            );
 
-            var elasticInferenceServiceRequestSenderFactory = new ElasticInferenceServiceRequestSender.Factory(
-                serviceComponents.get(), elasticInferenceServiceHttpClientManager, services.clusterService());
+            var elasticInferenceServiceRequestSenderFactory = new HttpRequestSender.Factory(
+                serviceComponents.get(), elasticInferenceServiceHttpClientManager, services.clusterService()
+            );
             elasicInferenceServiceFactory.set(elasticInferenceServiceRequestSenderFactory);
 
             elasticInferenceServiceComponents.set(new ElasticInferenceServiceComponents(elasticInferenceUrl));
@@ -249,10 +249,9 @@ public class InferencePlugin extends Plugin implements ActionPlugin, ExtensibleP
             inferenceServices.add(
                 () -> List.of(
                     context -> new ElasticInferenceService(
-                        httpFactory.get(),
+                        elasicInferenceServiceFactory.get(),
                         serviceComponents.get(),
-                        elasticInferenceServiceComponents.get(),
-                        elasicInferenceServiceFactory.get()
+                        elasticInferenceServiceComponents.get()
                     )
                 )
             );
@@ -376,7 +375,6 @@ public class InferencePlugin extends Plugin implements ActionPlugin, ExtensibleP
         return Stream.of(
             HttpSettings.getSettingsDefinitions(),
             HttpClientManager.getSettingsDefinitions(),
-            ElasticInferenceServiceHttpClientManager.getSettingsDefinitions(),
             ThrottlerManager.getSettingsDefinitions(),
             RetrySettings.getSettingsDefinitions(),
             ElasticInferenceServiceSettings.getSettingsDefinitions(),
