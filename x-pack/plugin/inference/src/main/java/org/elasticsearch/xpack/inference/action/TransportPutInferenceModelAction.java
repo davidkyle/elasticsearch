@@ -30,6 +30,10 @@ import org.elasticsearch.inference.Model;
 import org.elasticsearch.inference.ModelConfigurations;
 import org.elasticsearch.inference.TaskType;
 import org.elasticsearch.injection.guice.Inject;
+import org.elasticsearch.license.License;
+import org.elasticsearch.license.LicenseUtils;
+import org.elasticsearch.license.LicensedFeature;
+import org.elasticsearch.license.XPackLicenseState;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.tasks.Task;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -58,10 +62,17 @@ public class TransportPutInferenceModelAction extends TransportMasterNodeAction<
 
     private static final Logger logger = LogManager.getLogger(TransportPutInferenceModelAction.class);
 
+    public static final LicensedFeature.Momentary INFERENCE_API_FEATURE = LicensedFeature.momentary(
+        "inference",
+        "api",
+        License.OperationMode.ENTERPRISE
+    );
+
     private final ModelRegistry modelRegistry;
     private final InferenceServiceRegistry serviceRegistry;
     private final Client client;
     private volatile boolean skipValidationAndStart;
+    private final XPackLicenseState licenseState;
 
     @Inject
     public TransportPutInferenceModelAction(
@@ -69,6 +80,7 @@ public class TransportPutInferenceModelAction extends TransportMasterNodeAction<
         ClusterService clusterService,
         ThreadPool threadPool,
         ActionFilters actionFilters,
+        XPackLicenseState licenseState,
         IndexNameExpressionResolver indexNameExpressionResolver,
         ModelRegistry modelRegistry,
         InferenceServiceRegistry serviceRegistry,
@@ -86,6 +98,7 @@ public class TransportPutInferenceModelAction extends TransportMasterNodeAction<
             PutInferenceModelAction.Response::new,
             EsExecutors.DIRECT_EXECUTOR_SERVICE
         );
+        this.licenseState = licenseState;
         this.modelRegistry = modelRegistry;
         this.serviceRegistry = serviceRegistry;
         this.client = client;
@@ -101,6 +114,10 @@ public class TransportPutInferenceModelAction extends TransportMasterNodeAction<
         ClusterState state,
         ActionListener<PutInferenceModelAction.Response> listener
     ) throws Exception {
+
+        if (INFERENCE_API_FEATURE.check(licenseState) == false) {
+            throw LicenseUtils.newComplianceException("tada");
+        }
         var requestAsMap = requestToMap(request);
         var resolvedTaskType = ServiceUtils.resolveTaskType(request.getTaskType(), (String) requestAsMap.remove(TaskType.NAME));
 
