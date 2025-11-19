@@ -9,6 +9,7 @@
 
 package org.elasticsearch.index.codec.vectors.diskbbq.next;
 
+import org.HdrHistogram.Histogram;
 import org.apache.lucene.codecs.hnsw.FlatVectorsWriter;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.FloatVectorValues;
@@ -45,6 +46,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.IntSummaryStatistics;
 import java.util.function.IntUnaryOperator;
 
 import static org.elasticsearch.index.codec.vectors.cluster.HierarchicalKMeans.NO_SOAR_ASSIGNMENT;
@@ -97,11 +99,14 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
 
         int maxPostingListSize = 0;
         int[][] assignmentsByCluster = new int[centroidSupplier.size()][];
+        int totalSize = 0;
         for (int c = 0; c < centroidSupplier.size(); c++) {
             int size = centroidVectorCount[c];
             maxPostingListSize = Math.max(maxPostingListSize, size);
             assignmentsByCluster[c] = new int[size];
+            totalSize += size;
         }
+        logger.info("total size: {}", totalSize);
         Arrays.fill(centroidVectorCount, 0);
 
         for (int i = 0; i < assignments.length; i++) {
@@ -172,9 +177,9 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
             lengths.add(postingsOutput.getFilePointer() - fileOffset - offset);
         }
 
-        if (logger.isDebugEnabled()) {
-            printClusterQualityStatistics(assignmentsByCluster);
-        }
+        // if (logger.isDebugEnabled()) {
+        printClusterQualityStatistics(assignmentsByCluster);
+        // }
 
         return new CentroidOffsetAndLength(offsets.build(), lengths.build());
     }
@@ -251,12 +256,15 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         int maxPostingListSize = 0;
         int[][] assignmentsByCluster = new int[centroidSupplier.size()][];
         boolean[][] isOverspillByCluster = new boolean[centroidSupplier.size()][];
+        int totalSize = 0;
         for (int c = 0; c < centroidSupplier.size(); c++) {
             int size = centroidVectorCount[c];
             maxPostingListSize = Math.max(maxPostingListSize, size);
             assignmentsByCluster[c] = new int[size];
             isOverspillByCluster[c] = new boolean[size];
+            totalSize += size;
         }
+        logger.info("total size: {}", totalSize);
         Arrays.fill(centroidVectorCount, 0);
 
         for (int i = 0; i < assignments.length; i++) {
@@ -331,9 +339,9 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
                 lengths.add(postingsOutput.getFilePointer() - fileOffset - offset);
             }
 
-            if (logger.isDebugEnabled()) {
-                printClusterQualityStatistics(assignmentsByCluster);
-            }
+            // if (logger.isDebugEnabled()) {
+            printClusterQualityStatistics(assignmentsByCluster);
+            // }
             return new CentroidOffsetAndLength(offsets.build(), lengths.build());
         } finally {
             org.apache.lucene.util.IOUtils.deleteFilesIgnoringExceptions(mergeState.segmentInfo.dir, quantizedVectorsTempName);
@@ -341,33 +349,90 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
     }
 
     private static void printClusterQualityStatistics(int[][] clusters) {
-        float min = Float.MAX_VALUE;
-        float max = Float.MIN_VALUE;
-        float mean = 0;
-        float m2 = 0;
-        // iteratively compute the variance & mean
-        int count = 0;
+        int totalSize = 0;
         for (int[] cluster : clusters) {
-            count += 1;
+            totalSize += cluster.length;
+        }
+        int [] ass = new int[totalSize];
+
+
+        for (int[] cluster : clusters) {
+            for (int j=0; j<cluster.length; j++) {
+                ass[cluster[j]] += 1;
+            }
+        }
+
+        int [] howmany = new int[10];
+        for (int i=0; i<ass.length; i++) {
+            howmany[ass[i]] += 1;
+        }
+
+        System.out.println("howmany:" + Arrays.toString(howmany));
+
+
+
+
+
+        Histogram h = new Histogram(10_000L, 4);
+        double mean = 0;
+        double m2 = 0;
+        // iteratively compute the variance & mean
+        IntSummaryStatistics stats = new IntSummaryStatistics();
+        for (int[] cluster : clusters) {
             if (cluster == null) {
                 continue;
             }
-            float delta = cluster.length - mean;
-            mean += delta / count;
-            m2 += delta * (cluster.length - mean);
-            min = Math.min(min, cluster.length);
-            max = Math.max(max, cluster.length);
+
+            int nonzerosize = 0;
+            for (int i = 0; i < cluster.length; i++) {
+                if (cluster[i] >= 0) {
+                    nonzerosize++;
+                }
+            }
+            stats.accept(nonzerosize);
         }
-        float variance = m2 / (clusters.length - 1);
-        logger.debug(
-            "Centroid count: {} min: {} max: {} mean: {} stdDev: {} variance: {}",
+        mean = stats.getAverage();
+        for (int[] cluster : clusters) {
+            if (cluster == null) {
+                continue;
+            }
+            double delta = cluster.length - mean;
+            h.recordValue(cluster.length);
+            m2 += (delta * delta);
+        }
+        double variance = m2 / stats.getCount();
+        logger.info(
+            "Centroid count: {} min: {} max: {} mean: {} sum: {} stdDev: {} variance: {}",
             clusters.length,
-            min,
-            max,
-            mean,
+            stats.getMin(),
+            stats.getMax(),
+            stats.getAverage(),
+            stats.getSum(),
             Math.sqrt(variance),
             variance
         );
+
+        printHistogram(h);
+
+    }
+
+    private static void printHistogram(Histogram h) {
+        long min = h.getMinValue();
+        long max = h.getMaxValue();
+        long range = max - min;
+        long baseStep = range / 10;
+        long remainder = range % 10;
+
+        long current = min;
+        for (int i = 0; i < 10; i++) {
+            // Distribute the remainder across the first 'remainder' steps
+            long step = baseStep + (i < remainder ? 1 : 0);
+            long next = current + step;
+            var count = h.getCountBetweenValues(current, next);
+
+            System.out.println(current + " - " + next + ",  " + count);
+            current = next;
+        }
     }
 
     @Override
@@ -555,9 +620,9 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         // preliminary tests suggest recall is good using only centroids but need to do further evaluation
         KMeansResult kMeansResult = HierarchicalKMeans.ofSerial(floatVectorValues.dimension()).cluster(floatVectorValues, vectorPerCluster);
         float[][] centroids = kMeansResult.centroids();
-        if (logger.isDebugEnabled()) {
-            logger.debug("final centroid count: {}", centroids.length);
-        }
+//        if (logger.isDebugEnabled()) {
+            logger.info("final centroid count: {}", centroids.length);
+//        }
         int[] assignments = kMeansResult.assignments();
         int[] soarAssignments = kMeansResult.soarAssignments();
         return new CentroidAssignments(fieldInfo.getVectorDimension(), centroids, assignments, soarAssignments);

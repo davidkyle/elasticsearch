@@ -124,7 +124,7 @@ class KnnIndexer {
                 return Objects.equals(component, "IVF");
             }
         });
-        logger.debug(
+        logger.info(
             "KnnIndexer: using codec={}, vectorEncoding={}, dim={}, similarityFunction={}",
             codec.getName(),
             vectorEncoding,
@@ -133,7 +133,7 @@ class KnnIndexer {
         );
 
         if (Files.exists(indexPath)) {
-            logger.debug("KnnIndexer: existing index at {}", indexPath);
+            logger.info("KnnIndexer: existing index at {}", indexPath);
         } else {
             Files.createDirectories(indexPath);
         }
@@ -208,14 +208,14 @@ class KnnIndexer {
                 }
             }
             logger.info("KnnIndexer: indexed {} documents of desired {} numDocs", numDocsIndexed, numDocs);
-            logger.debug("all indexing threads finished, now IndexWriter.commit()");
+            logger.info("all indexing threads finished, now IndexWriter.commit()");
             iw.commit();
             ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler) iwc.getMergeScheduler();
             cms.sync();
         }
 
         long elapsed = System.nanoTime() - start;
-        logger.debug("Indexing took {} ms for {} docs", TimeUnit.NANOSECONDS.toMillis(elapsed), numDocs);
+        logger.info("Indexing took {} ms for {} docs", TimeUnit.NANOSECONDS.toMillis(elapsed), numDocs);
         result.indexTimeMS = TimeUnit.NANOSECONDS.toMillis(elapsed);
 
         // report numDocsIndexed here in case we have less than the total numDocs
@@ -340,7 +340,7 @@ class KnnIndexer {
                 doc.add(field);
 
                 if ((id + 1) % 25000 == 0) {
-                    logger.debug("Done indexing " + (id + 1) + " documents.");
+                    logger.info("Done indexing " + (id + 1) + " documents.");
                 }
                 doc.add(new StoredField(ID_FIELD, id));
                 iw.addDocument(doc);
