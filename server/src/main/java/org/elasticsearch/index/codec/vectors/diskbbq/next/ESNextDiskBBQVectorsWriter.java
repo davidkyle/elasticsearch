@@ -620,6 +620,7 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         // preliminary tests suggest recall is good using only centroids but need to do further evaluation
         KMeansResult kMeansResult = HierarchicalKMeans.ofSerial(floatVectorValues.dimension()).cluster(floatVectorValues, vectorPerCluster);
         float[][] centroids = kMeansResult.centroids();
+//        logger.info("clusterAndSplit: {}", h.clusterAndSplitCount);
 //        if (logger.isDebugEnabled()) {
             logger.info("final centroid count: {}", centroids.length);
 //        }
