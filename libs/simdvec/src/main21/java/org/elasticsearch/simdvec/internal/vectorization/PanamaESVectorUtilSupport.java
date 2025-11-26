@@ -1140,4 +1140,18 @@ public final class PanamaESVectorUtilSupport implements ESVectorUtilSupport {
         }
         return -1;
     }
+
+    public void fill(float [] arr, float val) {
+        int i = 0;
+        // It is assumed array arguments are of the same size
+        for (; i < SPECIES.loopBound(a.length); i += SPECIES.length()) {
+            FloatVector va = FloatVector.fromArray(SPECIES, a, i);
+            va.broadcast(val);
+            vc.intoArray(c, i);
+        }
+
+        for (; i < a.length; i++) {
+            c[i] = a[i] * b[i];
+        }
+    }
 }

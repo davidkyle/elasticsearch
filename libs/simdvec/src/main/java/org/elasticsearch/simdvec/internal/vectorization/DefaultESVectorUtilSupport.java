@@ -13,6 +13,8 @@ import org.apache.lucene.util.BitUtil;
 import org.apache.lucene.util.Constants;
 import org.apache.lucene.util.VectorUtil;
 
+import java.util.Arrays;
+
 final class DefaultESVectorUtilSupport implements ESVectorUtilSupport {
 
     private static float fma(float a, float b, float c) {
@@ -454,5 +456,10 @@ final class DefaultESVectorUtilSupport implements ESVectorUtilSupport {
     @Override
     public int indexOf(byte[] bytes, int offset, int length, byte marker) {
         return ByteArrayUtils.indexOf(bytes, offset, length, marker);
+    }
+
+    @Override
+    public void fill(float[] arr, float val) {
+        Arrays.fill(arr, val);
     }
 }
