@@ -18,6 +18,7 @@ public interface ESVectorUtilSupport {
 
     /**
      * Compute dot product between {@code q} and {@code d}
+     *
      * @param q query vector, {@link #B_QUERY}-bit quantized and striped (see {@code ESVectorUtil.transposeHalfByte})
      * @param d data vector, 1-bit quantized
      */
@@ -72,5 +73,7 @@ public interface ESVectorUtilSupport {
 
     int indexOf(byte[] bytes, int offset, int length, byte marker);
 
-    void fill(float [] arr, float val);
+    void vectorScalerDivide(float [] a, float b);
+
+    void vectorMultiply(float[] a, float[] b);
 }

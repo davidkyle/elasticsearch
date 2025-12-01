@@ -14,6 +14,7 @@ import org.apache.lucene.util.Constants;
 import org.apache.lucene.util.VectorUtil;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 
 final class DefaultESVectorUtilSupport implements ESVectorUtilSupport {
 
@@ -458,8 +459,15 @@ final class DefaultESVectorUtilSupport implements ESVectorUtilSupport {
         return ByteArrayUtils.indexOf(bytes, offset, length, marker);
     }
 
-    @Override
-    public void fill(float[] arr, float val) {
-        Arrays.fill(arr, val);
+    public void vectorScalerDivide(float [] a, float b) {
+        for (int d = 0; d < a.length; d++) {
+            a[d] /= b;
+        }
+    }
+
+    void vectorAdd(float[] a, float[] b) {
+        for (int d = 0; d < a.length; d++) {
+            a[d] += b[d];
+        }
     }
 }
