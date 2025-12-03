@@ -397,7 +397,7 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
                 continue;
             }
             double delta = cluster.length - mean;
-            h.recordValue(cluster.length);
+            h.recordValue(cluster.length / 2);
             m2 += (delta * delta);
         }
         double variance = m2 / stats.getCount();
