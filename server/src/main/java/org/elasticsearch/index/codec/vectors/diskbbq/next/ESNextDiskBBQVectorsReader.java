@@ -31,6 +31,8 @@ import org.elasticsearch.index.codec.vectors.OptimizedScalarQuantizer;
 import org.elasticsearch.index.codec.vectors.cluster.NeighborQueue;
 import org.elasticsearch.index.codec.vectors.diskbbq.DocIdsWriter;
 import org.elasticsearch.index.codec.vectors.diskbbq.IVFVectorsReader;
+import org.elasticsearch.logging.LogManager;
+import org.elasticsearch.logging.Logger;
 import org.elasticsearch.simdvec.ES92Int7VectorsScorer;
 import org.elasticsearch.simdvec.ESNextOSQVectorsScorer;
 import org.elasticsearch.simdvec.ESVectorUtil;
@@ -48,6 +50,8 @@ import static org.elasticsearch.simdvec.ESNextOSQVectorsScorer.BULK_SIZE;
  * brute force and then scores the top ones using the posting list.
  */
 public class ESNextDiskBBQVectorsReader extends IVFVectorsReader {
+
+    private static final Logger logger = LogManager.getLogger(ESNextDiskBBQVectorsReader.class);
 
     public ESNextDiskBBQVectorsReader(SegmentReadState state, GenericFlatVectorReaders.LoadFlatVectorsReader getFormatReader)
         throws IOException {
@@ -403,6 +407,7 @@ public class ESNextDiskBBQVectorsReader extends IVFVectorsReader {
             @Override
             public CentroidOffsetAndLength nextPostingListOffsetAndLength() throws IOException {
                 int centroidOrdinal = nextCentroid();
+                System.out.println(centroidOrdinal);
                 centroids.seek(childrenFileOffsets + (long) Long.BYTES * 2 * centroidOrdinal);
                 long postingListOffset = centroids.readLong();
                 long postingListLength = centroids.readLong();

@@ -310,6 +310,8 @@ public abstract class IVFVectorsReader extends KnnVectorsReader {
         // we account for soar vectors here. We can potentially visit a vector twice so we multiply by 2 here.
         long maxVectorVisited = (long) (2.0 * visitRatio * numVectors);
         IndexInput postListSlice = entry.postingListSlice(ivfClusters);
+
+        // order of centroids here??
         CentroidIterator centroidPrefetchingIterator = getCentroidIterator(
             fieldInfo,
             entry.numCentroids,
@@ -335,6 +337,7 @@ public abstract class IVFVectorsReader extends KnnVectorsReader {
             CentroidOffsetAndLength offsetAndLength = centroidPrefetchingIterator.nextPostingListOffsetAndLength();
             // todo do we need direct access to the raw centroid???, this is used for quantizing, maybe hydrating and quantizing
             // is enough?
+            System.out.println("postings " + offsetAndLength.offset());
             expectedDocs += scorer.resetPostingsScorer(offsetAndLength.offset());
             actualDocs += scorer.visit(knnCollector);
             if (knnCollector.getSearchStrategy() != null) {
