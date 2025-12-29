@@ -177,6 +177,9 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
             lengths.add(postingsOutput.getFilePointer() - fileOffset - offset);
         }
 
+        var co = new CentroidOffsetAndLength(offsets.build(), lengths.build());
+        printCentroidOffSets(co, centroidSupplier.size());
+//        printCentroidSimilarity(centroidSupplier);
         // if (logger.isDebugEnabled()) {
         printClusterQualityStatistics(assignmentsByCluster);
         // }
@@ -339,13 +342,51 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
                 lengths.add(postingsOutput.getFilePointer() - fileOffset - offset);
             }
 
+            // not this one
+            var co = new CentroidOffsetAndLength(offsets.build(), lengths.build());
+//            printCentroidSimilarity(centroidSupplier);
+            System.out.println("centroids:" + centroidSupplier.size());
+            printCentroidOffSets(co, centroidSupplier.size());
+
+
             // if (logger.isDebugEnabled()) {
             printClusterQualityStatistics(assignmentsByCluster);
             // }
-            return new CentroidOffsetAndLength(offsets.build(), lengths.build());
+
+            return co;
+
         } finally {
             org.apache.lucene.util.IOUtils.deleteFilesIgnoringExceptions(mergeState.segmentInfo.dir, quantizedVectorsTempName);
         }
+    }
+
+    private static void printCentroidOffSets(CentroidOffsetAndLength centroidOffsetAndLength, int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i < count; i++) {
+            sb.append(centroidOffsetAndLength.offsets().get(i)).append(",");
+        }
+
+        System.out.println(sb.toString());
+    }
+
+    private static void printCentroidSimilarity(CentroidSupplier centroidSupplier) throws IOException {
+
+        float[][] sim = new float[centroidSupplier.size()][];
+        for (int i = 0; i < centroidSupplier.size(); i++) {
+            sim[i] = new float[centroidSupplier.size()];
+            for (int j = 0; j < centroidSupplier.size(); j++) {
+                var a = centroidSupplier.centroid(i);
+                var b = centroidSupplier.centroid(j);
+
+                sim[i][j] = VectorUtil.cosine(a, b);
+            }
+        }
+
+        for (int i = 0; i < sim.length; i++) {
+            System.out.println(Arrays.toString(sim[i]) + ",");
+        }
+
+//        System.out.println(Arrays.deepToString(sim));
     }
 
     private static void printClusterQualityStatistics(int[][] clusters) {
