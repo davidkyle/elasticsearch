@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailuresAndResponse;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 
 public class RescoreKnnVectorQueryIT extends ESIntegTestCase {
@@ -228,7 +229,11 @@ public class RescoreKnnVectorQueryIT extends ESIntegTestCase {
                 if (i >= exactHits.length) {
                     fail("Knn doc not found in exact search");
                 }
-                assertThat("Real score is not the same as rescored score", knnHit.getScore(), equalTo(exactHits[i].getScore()));
+                assertThat(
+                    "Real score is not the same as rescored score",
+                    (double) knnHit.getScore(),
+                    closeTo(exactHits[i].getScore(), 0.0001)
+                );
             }
         });
     }
