@@ -42,6 +42,7 @@ import org.elasticsearch.logging.Logger;
 import org.elasticsearch.simdvec.ES92Int7VectorsScorer;
 import org.elasticsearch.simdvec.ESNextOSQVectorsScorer;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -178,6 +179,7 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         }
 
         var co = new CentroidOffsetAndLength(offsets.build(), lengths.build());
+        printCentroidSimilarity(new FileWriter("/Users/davidkyle/Development/vectordb/tests/" + "centroid_sim.csv"), centroidSupplier);
         printCentroidOffSets(co, centroidSupplier.size());
 //        printCentroidSimilarity(centroidSupplier);
         // if (logger.isDebugEnabled()) {
@@ -369,7 +371,7 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         System.out.println(sb.toString());
     }
 
-    private static void printCentroidSimilarity(CentroidSupplier centroidSupplier) throws IOException {
+    private static void printCentroidSimilarity(FileWriter out, CentroidSupplier centroidSupplier) throws IOException {
 
         float[][] sim = new float[centroidSupplier.size()][];
         for (int i = 0; i < centroidSupplier.size(); i++) {
@@ -383,10 +385,13 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         }
 
         for (int i = 0; i < sim.length; i++) {
-            System.out.println(Arrays.toString(sim[i]) + ",");
+            for (int j = 0; j < sim[i].length; j++) {
+                out.write(Float.toString(sim[i][j]) + ",");
+            }
+            out.write("\n");
         }
+        out.flush();
 
-//        System.out.println(Arrays.deepToString(sim));
     }
 
     private static void printClusterQualityStatistics(int[][] clusters) {
