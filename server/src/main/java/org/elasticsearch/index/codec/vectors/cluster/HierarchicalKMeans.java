@@ -144,12 +144,18 @@ public class HierarchicalKMeans {
     }
 
     private KMeansIntermediate clusterAndSplit(final FloatVectorValues vectors, final int targetSize) throws IOException {
+        return clusterAndSplit(vectors, targetSize, 0);
+    }
+
+    private KMeansIntermediate clusterAndSplit(final FloatVectorValues vectors, final int targetSize, int depth) throws IOException {
+        // System.out.println("clusterAndSplit depth " + depth++);
         if (vectors.size() <= targetSize) {
             return new KMeansIntermediate();
         }
 
         int k = Math.clamp((int) ((vectors.size() + targetSize / 2.0f) / (float) targetSize), 2, MAXK); // why
         int m = Math.min(k * samplesPerCluster, vectors.size());
+        // System.out.println("k=" + k + " m=" + m);
 
         // TODO: instead of creating a sub-cluster assignments reuse the parent array each time
         int[] assignments = new int[vectors.size()];
@@ -193,7 +199,8 @@ public class HierarchicalKMeans {
                 // TODO: consider iterative here instead of recursive
                 // recursive call to build out the sub partitions around this centroid c
                 // subsequently reconcile and flatten the space of all centroids and assignments into one structure we can return
-                updateAssignmentsWithRecursiveSplit(kMeansIntermediate, adjustedCentroid, clusterAndSplit(sample, targetSize));
+                updateAssignmentsWithRecursiveSplit(kMeansIntermediate, adjustedCentroid, clusterAndSplit(sample, targetSize, depth));
+                // System.out.println("splitting cluster " + c);
             } else if (count == 0) {
                 // remove empty clusters
                 final int newSize = kMeansIntermediate.centroids().length - 1;
@@ -250,18 +257,37 @@ public class HierarchicalKMeans {
 
         // update based on the outcomes from the split clusters recursion
         float[][] newCentroids = new float[newCentroidsSize][];
-        System.arraycopy(current.centroids(), 0, newCentroids, 0, current.centroids().length);
 
-        // replace the original cluster
-        int origCentroidOrd = 0;
-        newCentroids[cluster] = subPartitions.centroids()[0];
+        {
+            System.arraycopy(current.centroids(), 0, newCentroids, 0, current.centroids().length);
 
-        // append the remainder
-        System.arraycopy(subPartitions.centroids(), 1, newCentroids, current.centroids().length, subPartitions.centroids().length - 1);
+            // replace the original cluster
+            newCentroids[cluster] = subPartitions.centroids()[0];
+            // append the remainder
+            System.arraycopy(subPartitions.centroids(), 1, newCentroids, current.centroids().length, subPartitions.centroids().length - 1);
+        }
+/*
+        {
+            // copy centroids prior to the split
+            System.arraycopy(current.centroids(), 0, newCentroids, 0, cluster);
+            // insert the split partitions replacing the original cluster
+            System.arraycopy(subPartitions.centroids(), 0, newCentroids, cluster, subPartitions.centroids().length);
+            // append the remainder
+            System.arraycopy(
+                current.centroids(),
+                cluster + 1,
+                newCentroids,
+                cluster + subPartitions.centroids().length,
+                current.centroids().length - cluster - 1
+            );
+        }
+
+ */
         assert Arrays.stream(newCentroids).allMatch(Objects::nonNull);
 
         current.setCentroids(newCentroids);
 
+        final int origCentroidOrd = 0;
         for (int i = 0; i < subPartitions.assignments().length; i++) {
             // this is a new centroid that was added, and so we'll need to remap it
             if (subPartitions.assignments()[i] != origCentroidOrd) {
