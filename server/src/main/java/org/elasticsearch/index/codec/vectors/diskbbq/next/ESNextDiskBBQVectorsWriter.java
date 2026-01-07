@@ -466,11 +466,12 @@ public class ESNextDiskBBQVectorsWriter extends IVFVectorsWriter {
         long min = h.getMinValue();
         long max = h.getMaxValue();
         long range = max - min;
-        long baseStep = range / 10;
-        long remainder = range % 10;
+        final long size = 20;
+        long baseStep = range / size;
+        long remainder = range % size;
 
         long current = min;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < size; i++) {
             // Distribute the remainder across the first 'remainder' steps
             long step = baseStep + (i < remainder ? 1 : 0);
             long next = current + step;
