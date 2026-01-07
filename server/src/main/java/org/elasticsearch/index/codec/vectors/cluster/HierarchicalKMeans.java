@@ -144,10 +144,6 @@ public class HierarchicalKMeans {
     }
 
     private KMeansIntermediate clusterAndSplit(final FloatVectorValues vectors, final int targetSize) throws IOException {
-        return clusterAndSplit(vectors, targetSize, 0);
-    }
-
-    private KMeansIntermediate clusterAndSplit(final FloatVectorValues vectors, final int targetSize, int depth) throws IOException {
         // System.out.println("clusterAndSplit depth " + depth++);
         if (vectors.size() <= targetSize) {
             return new KMeansIntermediate();
@@ -188,18 +184,22 @@ public class HierarchicalKMeans {
             return kMeansIntermediate;
         }
 
-        int removedElements = 0;
+        int offsetAdjustment = 0;
         for (int c = 0; c < centroidVectorCount.length; c++) {
             // Recurse for each cluster which is larger than targetSize
             // Give ourselves 30% margin for the target size
             final int count = centroidVectorCount[c];
-            final int adjustedCentroid = c - removedElements;
+            final int adjustedCentroid = c  + offsetAdjustment;
             if (100 * count > 134 * targetSize) {
-                final FloatVectorValues sample = createClusterSlice(count, adjustedCentroid, vectors, assignments);
+                final FloatVectorValues sample = createClusterSlice(count, c, vectors, assignments);
                 // TODO: consider iterative here instead of recursive
                 // recursive call to build out the sub partitions around this centroid c
                 // subsequently reconcile and flatten the space of all centroids and assignments into one structure we can return
-                updateAssignmentsWithRecursiveSplit(kMeansIntermediate, adjustedCentroid, clusterAndSplit(sample, targetSize, depth));
+                offsetAdjustment += updateAssignmentsWithRecursiveSplit(
+                    kMeansIntermediate,
+                    adjustedCentroid,
+                    clusterAndSplit(sample, targetSize)
+                );
                 // System.out.println("splitting cluster " + c);
             } else if (count == 0) {
                 // remove empty clusters
@@ -220,7 +220,7 @@ public class HierarchicalKMeans {
                     }
                 }
                 kMeansIntermediate.setCentroids(newCentroids);
-                removedElements++;
+                offsetAdjustment--;
             }
         }
 
@@ -248,25 +248,30 @@ public class HierarchicalKMeans {
         return new FloatVectorValuesSlice(vectors, slice);
     }
 
-    void updateAssignmentsWithRecursiveSplit(KMeansIntermediate current, int cluster, KMeansIntermediate subPartitions) {
+    int updateAssignmentsWithRecursiveSplit(KMeansIntermediate current, int cluster, KMeansIntermediate subPartitions) {
+        // System.out.println("updateAssignmentsWithRecursiveSplit: " + cluster + " " + subPartitions.centroids().length);
+
         if (subPartitions.centroids().length == 0) {
-            return; // nothing to do, sub-partitions is empty
+            return 0; // nothing to do, sub-partitions is empty
         }
+
         int orgCentroidsSize = current.centroids().length;
         int newCentroidsSize = current.centroids().length + subPartitions.centroids().length - 1;
 
         // update based on the outcomes from the split clusters recursion
         float[][] newCentroids = new float[newCentroidsSize][];
 
-        {
-            System.arraycopy(current.centroids(), 0, newCentroids, 0, current.centroids().length);
+        // {
+        // System.arraycopy(current.centroids(), 0, newCentroids, 0, current.centroids().length);
+        //
+        // // replace the original cluster
+        // newCentroids[cluster] = subPartitions.centroids()[0];
+        // // append the remainder
+        // System.arraycopy(subPartitions.centroids(), 1, newCentroids, current.centroids().length, subPartitions.centroids().length - 1);
+        //
+        // System.out.println(cluster + ", " + current.centroids().length);
+        // }
 
-            // replace the original cluster
-            newCentroids[cluster] = subPartitions.centroids()[0];
-            // append the remainder
-            System.arraycopy(subPartitions.centroids(), 1, newCentroids, current.centroids().length, subPartitions.centroids().length - 1);
-        }
-/*
         {
             // copy centroids prior to the split
             System.arraycopy(current.centroids(), 0, newCentroids, 0, cluster);
@@ -280,9 +285,10 @@ public class HierarchicalKMeans {
                 cluster + subPartitions.centroids().length,
                 current.centroids().length - cluster - 1
             );
+
+            System.out.println(cluster + ", " + current.centroids().length);
         }
 
- */
         assert Arrays.stream(newCentroids).allMatch(Objects::nonNull);
 
         current.setCentroids(newCentroids);
@@ -296,5 +302,7 @@ public class HierarchicalKMeans {
                 current.assignments()[parentOrd] = subPartitions.assignments()[i] + orgCentroidsSize - 1;
             }
         }
+
+        return subPartitions.centroids().length -1; // number of items inserted (1 replaced)
     }
 }
