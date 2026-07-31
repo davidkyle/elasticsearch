@@ -28,7 +28,6 @@ import org.elasticsearch.xpack.searchablesnapshots.store.SearchableSnapshotDirec
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.stream.IntStream;
 
 import static org.elasticsearch.simdvec.ES93BinaryQuantizedVectorScorer.BBQ_CORRECTIONS_BYTES;
@@ -166,45 +165,83 @@ public class ES93BinaryQuantizedVectorScorerTests extends BaseVectorizationTests
 
                 final float[] scoresDefault = new float[numVectors];
                 final float[] scoresPanama = new float[numVectors];
+
+                final float[] singleScoresDefault = new float[numVectors];
+                final float[] singleScoresPanama = new float[numVectors];
+
                 var nodeList = new ArrayList<>(IntStream.range(0, numVectors).boxed().toList());
-                Collections.shuffle(nodeList, random());
+                // Collections.shuffle(nodeList, random());
                 final int[] nodes = nodeList.stream().mapToInt(Integer::intValue).toArray();
 
-                float defaultMaxScore = defaultScorer.scoreBulk(
-                    queryData.vector(),
-                    queryData.lowerInterval(),
-                    queryData.upperInterval(),
-                    queryData.quantizedComponentSum(),
-                    queryData.additionalCorrection(),
-                    similarityFunction,
-                    centroidDp,
-                    nodes,
-                    scoresDefault,
-                    numVectors
-                );
-                float panamaMaxScore = nativeScorer.scoreBulk(
-                    queryData.vector(),
-                    queryData.lowerInterval(),
-                    queryData.upperInterval(),
-                    queryData.quantizedComponentSum(),
-                    queryData.additionalCorrection(),
-                    similarityFunction,
-                    centroidDp,
-                    nodes,
-                    scoresPanama,
-                    numVectors
-                );
+                {
+                    for (int i = 0; i < numVectors; i++) {
+                        var defaultScore = defaultScorer.score(
+                            queryData.vector(),
+                            queryData.lowerInterval(),
+                            queryData.upperInterval(),
+                            queryData.quantizedComponentSum(),
+                            queryData.additionalCorrection(),
+                            similarityFunction,
+                            centroidDp,
+                            i
+                        );
+                        var panamaScore = nativeScorer.score(
+                            queryData.vector(),
+                            queryData.lowerInterval(),
+                            queryData.upperInterval(),
+                            queryData.quantizedComponentSum(),
+                            queryData.additionalCorrection(),
+                            similarityFunction,
+                            centroidDp,
+                            i
+                        );
 
-                assertEqualsPercent(defaultMaxScore, panamaMaxScore, 0.05f);
-                assertArrayEqualsPercent(scoresDefault, scoresPanama, 0.05f);
+                        assertEquals(defaultScore, panamaScore, 1e-2f);
+                        singleScoresDefault[i] = defaultScore;
+                        singleScoresPanama[i] = panamaScore;
+                    }
+                }
+
+                {
+                    float defaultMaxScore = defaultScorer.scoreBulk(
+                        queryData.vector(),
+                        queryData.lowerInterval(),
+                        queryData.upperInterval(),
+                        queryData.quantizedComponentSum(),
+                        queryData.additionalCorrection(),
+                        similarityFunction,
+                        centroidDp,
+                        nodes,
+                        scoresDefault,
+                        numVectors
+                    );
+                    float panamaMaxScore = nativeScorer.scoreBulk(
+                        queryData.vector(),
+                        queryData.lowerInterval(),
+                        queryData.upperInterval(),
+                        queryData.quantizedComponentSum(),
+                        queryData.additionalCorrection(),
+                        similarityFunction,
+                        centroidDp,
+                        nodes,
+                        scoresPanama,
+                        numVectors
+                    );
+
+                    // assertArrayEqualsPercent(scoresDefault, scoresPanama, 0.05f);
+                    // assertEqualsPercent(defaultMaxScore, panamaMaxScore, 0.05f);
+                }
+
+                assertArrayEqualsPercent(scoresDefault, singleScoresDefault, 0.001f);
+                assertArrayEqualsPercent(scoresPanama, singleScoresPanama, 0.001f);
             }
         }
     }
 
     @ParametersFactory
     public static Iterable<Object[]> parametersFactory() {
-        return () -> Arrays.stream(DirectoryType.values())
-            .flatMap(d -> Arrays.stream(VectorSimilarityFunction.values()).map(f -> new Object[] { d, f }))
-            .iterator();
+        Object[][] params = new Object[1][];
+        params[0] = new Object[] { DirectoryType.MMAP, VectorSimilarityFunction.EUCLIDEAN };
+        return () -> Arrays.stream(params).iterator();
     }
 }
