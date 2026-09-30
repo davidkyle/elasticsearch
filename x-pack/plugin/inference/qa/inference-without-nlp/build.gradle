@@ -1,0 +1,9 @@
+apply plugin: 'elasticsearch.internal-yaml-rest-test'
+
+dependencies {
+  clusterPlugins project(':x-pack:plugin:inference:qa:test-service-plugin')
+}
+
+tasks.named('yamlRestTest') {
+  usesDefaultDistribution("requires ML plugin to be present with NLP disabled")
+}
